@@ -337,15 +337,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // PDF GENERATION & RANDOM NUMBER LOGIC
     // ==========================================
 
-    function populatePdfTemplate(bookingId, flightNo, dateString, dayString) {
+    formTrip.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        // 1. Generate random elements
+        const bookingId = Math.floor(100000 + Math.random() * 900000); // 6 digit booking number
+        const flightNo = "SV" + Math.floor(100 + Math.random() * 900); // SV + 3 digit flight number
+        
+        // 2. Fetch current date info (localized to user's timezone)
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+        
+        const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const dayString = days[now.getDay()];
+
         const addSpacing = (str) => {
             if (!str) return '';
             // Replaces multiple spaces with double non-breaking spaces for PDF boxes
             return str.toString().trim().split(/\s+/).join('\u00A0\u00A0');
         };
-
-        const gName = guestNameInput.value.trim() || "غير محدد";
-        const gPhone = guestPhoneInput.value.trim() || "غير محدد";
 
         // 3. Populate Page 1 values
         document.getElementById('p1-day').textContent = addSpacing(dayString);
@@ -360,6 +373,9 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('p1-source').textContent = addSpacing(tripSource.value);
         document.getElementById('p1-destination').textContent = addSpacing(tripDestination.value);
         
+        // Handle optional Guest Name and phone
+        const gName = guestNameInput.value.trim() || "غير محدد";
+        const gPhone = guestPhoneInput.value.trim() || "غير محدد";
         document.getElementById('p1-guest-name').textContent = addSpacing(gName);
         document.getElementById('p1-guest-phone').textContent = addSpacing(gPhone);
         document.getElementById('p1-flight-no').textContent = addSpacing(flightNo);
@@ -402,58 +418,6 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             compTbody.appendChild(tr);
         }
-    }
-
-    // Direct Browser Printing fallback handler
-    document.getElementById('btn-native-print').addEventListener('click', (e) => {
-        // Validate form inputs
-        if (!formTrip.checkValidity()) {
-            formTrip.reportValidity();
-            return;
-        }
-
-        const bookingId = Math.floor(100000 + Math.random() * 900000);
-        const flightNo = "SV" + Math.floor(100 + Math.random() * 900);
-        const now = new Date();
-        const dateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-        const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        const dayString = days[now.getDay()];
-
-        // Populate elements
-        populatePdfTemplate(bookingId, flightNo, dateString, dayString);
-
-        // Put a fallback offline QR code containing metadata for instant scan readout
-        const fallbackQrData = `مؤسسة زوار طيبة للنقل البري\nكشف ركاب رقم الحجز: ${bookingId}\nالسائق: ${currentDriver.driverName}\nالهوية: ${currentDriver.nationalId}\nرقم اللوحة: ${currentDriver.plateNumber}`;
-        const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fallbackQrData)}`;
-        document.getElementById('qrcode-p1').src = fallbackQrUrl;
-        document.getElementById('qrcode-p2').src = fallbackQrUrl;
-        document.getElementById('qrcode-p3').src = fallbackQrUrl;
-
-        // Trigger print preview after images load
-        setTimeout(() => {
-            window.print();
-        }, 300);
-    });
-
-    formTrip.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        // 1. Generate random elements
-        const bookingId = Math.floor(100000 + Math.random() * 900000); // 6 digit booking number
-        const flightNo = "SV" + Math.floor(100 + Math.random() * 900); // SV + 3 digit flight number
-        
-        // 2. Fetch current date info (localized to user's timezone)
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}`;
-        
-        const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
-        const dayString = days[now.getDay()];
-
-        // Populate common template elements
-        populatePdfTemplate(bookingId, flightNo, dateString, dayString);
 
         // Put empty/placeholder image for QR initially
         document.getElementById('qrcode-p1').src = '';

@@ -1,0 +1,9 @@
+{
+  "name": "zowar-taiba-passenger-pdf",
+  "version": "1.0.0",
+  "description": "Zowar Taiba land transport passenger list generator",
+  "main": "app.js",
+  "dependencies": {
+    "@vercel/blob": "^0.22.1"
+  }
+}

@@ -24,7 +24,7 @@ let arabicCanvasFont = 'Cairo, Arial, sans-serif';
 function renderArabicToCanvas(text, fontSize, color, fontWeight) {
     if (!text) return null;
     try {
-        const scale = 3; // Retina scale for crisp text
+        const scale = 1.5; // Optimized scale to keep PDF size small and under Vercel payload limits
         const fontStr = `${fontWeight || 'normal'} ${fontSize * scale}px ${arabicCanvasFont}`;
         
         // Measure text width
@@ -33,7 +33,7 @@ function renderArabicToCanvas(text, fontSize, color, fontWeight) {
         if (!mctx) return null;
         mctx.font = fontStr;
         const metrics = mctx.measureText(text);
-        const textWidthPx = Math.ceil(metrics.width || 10) + 20; // slight padding
+        const textWidthPx = Math.ceil(metrics.width || 10) + 10; // slight padding
         const textHeightPx = Math.ceil(fontSize * scale * 1.5);
         
         // Render text
@@ -49,7 +49,7 @@ function renderArabicToCanvas(text, fontSize, color, fontWeight) {
         ctx.direction = 'rtl';
         ctx.textAlign = 'right';
         // Draw text from the right edge
-        ctx.fillText(text, textWidthPx - 5, textHeightPx / 2);
+        ctx.fillText(text, textWidthPx - 3, textHeightPx / 2);
         
         return {
             dataUrl: canvas.toDataURL('image/png'),
@@ -97,8 +97,8 @@ function addArabicText(doc, text, xMm, yMm, options = {}) {
             return 10;
         }
         
-        // Convert pixels to mm (at 96 DPI: 1mm = 3.7795px; we used scale=3 so actual px / 3 / 3.7795)
-        const scale = 3;
+        // Convert pixels to mm (at 96 DPI: 1mm = 3.7795px; we used scale=1.5 so actual px / 1.5 / 3.7795)
+        const scale = 1.5;
         const pxToMm = 1 / (3.7795 * scale);
         const widthMm = rendered.widthPx * pxToMm;
         const heightMm = rendered.heightPx * pxToMm;
@@ -195,7 +195,8 @@ async function generateTripPdf(data) {
     const doc = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
-        format: 'a4'
+        format: 'a4',
+        compress: true // Enable document-wide zip compression to reduce output file size
     });
 
     // We use addArabicText() for all Arabic strings — it renders via Canvas so the

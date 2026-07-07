@@ -1,6 +1,5 @@
 import { put } from '@vercel/blob';
 
-// Trigger deployment
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method Not Allowed' });

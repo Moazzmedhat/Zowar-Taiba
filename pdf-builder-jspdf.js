@@ -570,7 +570,8 @@ async function generateTripPdf(data) {
         for (let c = 0; c < 4; c++) {
             doc.rect(iX[c], y, iCols[c], 6, 'F');
             doc.rect(iX[c], y, iCols[c], 6, 'S');
-            addArabicText(doc, iHdrs[c], iX[c] + iCols[c] - 1, y + 4.5, { fontSize: 7.5, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
+            const centerX = iX[c] + iCols[c] / 2;
+            addArabicText(doc, iHdrs[c], centerX, y + 4.5, { fontSize: 7.5, color: '#000000', fontStyle: 'bold', align: 'center', transparent: true });
         }
         y += 6;
         
@@ -579,8 +580,9 @@ async function generateTripPdf(data) {
             for (let c = 0; c < 4; c++) {
                 doc.rect(iX[c], y, iCols[c], 6, 'S');
             }
-            // Draw item name in 'البند' column (index 3) - set transparent: true to prevent white box overlapping grid borders
-            addArabicText(doc, item, iX[3] + iCols[3] - 1, y + 4.5, { fontSize: 7.5, color: '#000000', align: 'right', transparent: true });
+            // Draw item name centered in 'البند' column (index 3) - set transparent: true to prevent white box overlapping grid borders
+            const itemCenterX = iX[3] + iCols[3] / 2;
+            addArabicText(doc, item, itemCenterX, y + 4.5, { fontSize: 7.5, color: '#000000', align: 'center', transparent: true });
             
             // Draw a beautiful checkmark '✓' using Canvas (index 2)
             addArabicText(doc, '✓', iX[2] + iCols[2] / 2, y + 4.5, { fontSize: 9, color: '#009688', fontStyle: 'bold', align: 'center', transparent: true });

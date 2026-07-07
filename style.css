@@ -362,7 +362,7 @@ table.admin-table tbody tr:hover td {
 }
 
 .pdf-header-right h2 {
-    font-size: 14px;
+    font-size: 16px;
     margin-bottom: 1px;
     color: #000;
     border-bottom: none;
@@ -384,12 +384,12 @@ table.admin-table tbody tr:hover td {
 }
 
 .pdf-header-center img {
-    height: 38px;
+    height: 46px;
     margin-bottom: 2px;
 }
 
 .pdf-header-center div {
-    font-size: 9px;
+    font-size: 10.5px;
     color: #000;
     font-weight: bold;
 }

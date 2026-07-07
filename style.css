@@ -24,14 +24,12 @@
 
 body {
     font-family: 'Cairo', sans-serif;
-    color: var(--text-color);
+     color: var(--text-color);
     min-height: 100vh;
     direction: rtl;
     text-align: right;
     display: flex;
     flex-direction: column;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
 }
 
 header {

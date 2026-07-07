@@ -443,9 +443,9 @@ document.addEventListener('DOMContentLoaded', () => {
             margin:       0,
             filename:     `Zowar-Taiba-Trip-Booking-${bookingId}.pdf`,
             image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, letterRendering: false, windowWidth: 794, windowHeight: 1123 },
+            html2canvas:  { scale: 2, useCORS: true, letterRendering: false },
             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: ['css'] }
+            pagebreak:    { mode: ['css', 'legacy'] }
         };
 
         // Render first draft PDF to upload

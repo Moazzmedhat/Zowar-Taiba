@@ -448,62 +448,99 @@ document.addEventListener('DOMContentLoaded', () => {
             pagebreak:    { mode: ['css', 'legacy'] }
         };
 
-        // Render first draft PDF to upload
-        html2pdf().set(opt).from(pdfTemplate).toPdf().get('pdf').then(function(pdfObj) {
-            const pdfBlob = pdfObj.output('blob');
-            
-            // Upload to Vercel Blob Storage via our API endpoint
-            fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
-                method: 'POST',
-                body: pdfBlob
-            })
-            .then(response => {
-                if (!response.ok) throw new Error("Vercel Blob upload response failed");
-                return response.json();
-            })
-            .then(data => {
-                // Vercel Blob returns the direct permanent URL in the 'url' property
-                const publicUrl = data.url;
-                
-                // Now render the QR codes using this public URL
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`;
-                document.getElementById('qrcode-p1').src = qrUrl;
-                document.getElementById('qrcode-p2').src = qrUrl;
-                document.getElementById('qrcode-p3').src = qrUrl;
+        // Get iframe reference and document
+        const iframe = document.getElementById('pdf-render-iframe');
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
 
-                // Wait slightly for QR images to load, then re-render the final PDF
-                setTimeout(() => {
-                    html2pdf().set(opt).from(pdfTemplate).save().then(() => {
-                        statusNotice.remove();
-                        alert("تم إصدار كشف الركاب بنجاح! عند مسح رمز الـ QR سيفتح الملف مباشرة.");
-                    }).catch(pdfErr => {
-                        statusNotice.remove();
-                        console.error("PDF Final Render Error:", pdfErr);
-                        alert("خطأ أثناء إصدار كشف الركاب النهائي: " + pdfErr.message);
-                    });
-                }, 800);
-            })
-            .catch(uploadErr => {
+        // Copy populated template and CSS to iframe
+        iframeDoc.open();
+        iframeDoc.write(`
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <link rel="stylesheet" href="style.css">
+                <style>
+                    body { margin: 0; background: #fff; width: 794px; }
+                </style>
+            </head>
+            <body>
+                ${pdfTemplate.outerHTML}
+            </body>
+            </html>
+        `);
+        iframeDoc.close();
+
+        // Wait slightly for iframe style load, then render
+        setTimeout(() => {
+            const targetElement = iframeDoc.body;
+
+            // Render first draft PDF to upload
+            html2pdf().set(opt).from(targetElement).toPdf().get('pdf').then(function(pdfObj) {
+                const pdfBlob = pdfObj.output('blob');
+                
+                // Upload to Vercel Blob Storage via our API endpoint
+                fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
+                    method: 'POST',
+                    body: pdfBlob
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error("Vercel Blob upload response failed");
+                    return response.json();
+                })
+                .then(data => {
+                    // Vercel Blob returns the direct permanent URL in the 'url' property
+                    const publicUrl = data.url;
+                    
+                    // Now render the QR codes using this public URL inside the iframe elements
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`;
+                    iframeDoc.getElementById('qrcode-p1').src = qrUrl;
+                    iframeDoc.getElementById('qrcode-p2').src = qrUrl;
+                    iframeDoc.getElementById('qrcode-p3').src = qrUrl;
+
+                    // Also sync back to main page elements just in case
+                    document.getElementById('qrcode-p1').src = qrUrl;
+                    document.getElementById('qrcode-p2').src = qrUrl;
+                    document.getElementById('qrcode-p3').src = qrUrl;
+
+                    // Wait slightly for QR images to load, then re-render the final PDF
+                    setTimeout(() => {
+                        html2pdf().set(opt).from(targetElement).save().then(() => {
+                            statusNotice.remove();
+                            alert("تم إصدار كشف الركاب بنجاح! عند مسح رمز الـ QR سيفتح الملف مباشرة.");
+                        }).catch(pdfErr => {
+                            statusNotice.remove();
+                            console.error("PDF Final Render Error:", pdfErr);
+                            alert("خطأ أثناء إصدار كشف الركاب النهائي: " + pdfErr.message);
+                        });
+                    }, 800);
+                })
+                .catch(uploadErr => {
+                    statusNotice.remove();
+                    console.error("Cloud Upload Error:", uploadErr);
+                    alert("يتعذر الاتصال بالسحابة حالياً. تم حفظ كشف الركاب محلياً برمز QR احتياطي.");
+                    
+                    // Fallback QR code containing metadata summary in readable plain text
+                    const fallbackQrData = `مؤسسة زوار طيبة للنقل البري\nكشف ركاب رقم الحجز: ${bookingId}\nالسائق: ${currentDriver.driverName}\nالهوية: ${currentDriver.nationalId}\nرقم اللوحة: ${currentDriver.plateNumber}`;
+                    const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fallbackQrData)}`;
+                    
+                    iframeDoc.getElementById('qrcode-p1').src = fallbackQrUrl;
+                    iframeDoc.getElementById('qrcode-p2').src = fallbackQrUrl;
+                    iframeDoc.getElementById('qrcode-p3').src = fallbackQrUrl;
+
+                    document.getElementById('qrcode-p1').src = fallbackQrUrl;
+                    document.getElementById('qrcode-p2').src = fallbackQrUrl;
+                    document.getElementById('qrcode-p3').src = fallbackQrUrl;
+                    
+                    setTimeout(() => {
+                        html2pdf().set(opt).from(targetElement).save();
+                    }, 800);
+                });
+            }).catch(compileErr => {
                 statusNotice.remove();
-                console.error("Cloud Upload Error:", uploadErr);
-                alert("يتعذر الاتصال بالسحابة حالياً. تم حفظ كشف الركاب محلياً برمز QR احتياطي.");
-                
-                // Fallback QR code containing metadata summary in readable plain text
-                const fallbackQrData = `مؤسسة زوار طيبة للنقل البري\nكشف ركاب رقم الحجز: ${bookingId}\nالسائق: ${currentDriver.driverName}\nالهوية: ${currentDriver.nationalId}\nرقم اللوحة: ${currentDriver.plateNumber}`;
-                const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fallbackQrData)}`;
-                document.getElementById('qrcode-p1').src = fallbackQrUrl;
-                document.getElementById('qrcode-p2').src = fallbackQrUrl;
-                document.getElementById('qrcode-p3').src = fallbackQrUrl;
-                
-                setTimeout(() => {
-                    html2pdf().set(opt).from(pdfTemplate).save();
-                }, 800);
+                console.error("PDF compilation error:", compileErr);
+                alert("حدث خطأ أثناء إصدار كشف الركاب: " + compileErr.message);
             });
-        }).catch(compileErr => {
-            statusNotice.remove();
-            console.error("PDF compilation error:", compileErr);
-            alert("حدث خطأ أثناء إصدار كشف الركاب: " + compileErr.message);
-        });
+        }, 200);
     });
 
 });

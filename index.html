@@ -190,6 +190,9 @@
     <!-- ==========================================================================
          PDF HTML TEMPLATE CONTAINER
          ========================================================================== -->
+    <!-- Hidden iframe sandbox for stable desktop-viewport PDF rendering on mobile -->
+    <iframe id="pdf-render-iframe" style="position: absolute; left: -10000px; top: 0; width: 794px; height: 1000px; border: none; visibility: hidden;"></iframe>
+
     <div style="position: fixed; left: -10000px; top: 0; width: 210mm; z-index: -9999;">
         <div id="pdf-template-wrapper" class="print-only-container">
             

@@ -1,0 +1,686 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&display=swap');
+
+:root {
+    --primary: #009688;
+    --primary-light: #00b4c5;
+    --primary-dark: #00796b;
+    --secondary: #1e293b;
+    --bg-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    --card-bg: #ffffff;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.03), 0 0 1px 0 rgba(0, 0, 0, 0.1);
+    --border-radius: 12px;
+    --text-color: #334155;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+    --success: #10b981;
+    --danger: #ef4444;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Cairo', sans-serif;
+     color: var(--text-color);
+    min-height: 100vh;
+    direction: rtl;
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+}
+
+header {
+    background-color: #ffffff;
+    border-bottom: 1px solid var(--border-color);
+    padding: 15px 40px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo-img {
+    height: 48px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+}
+
+.logo-img:hover {
+    transform: scale(1.05);
+}
+
+.header-title h1 {
+    font-size: 1.4rem;
+    color: var(--secondary);
+    font-weight: 800;
+}
+
+.nav-links {
+    display: flex;
+    gap: 12px;
+}
+
+.btn {
+    padding: 11px 22px;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.95rem;
+}
+
+.btn-primary {
+    background-color: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 2px 4px 0 rgba(0, 150, 136, 0.15);
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px 0 rgba(0, 150, 136, 0.2);
+}
+
+.btn-secondary {
+    background-color: #f1f5f9;
+    color: var(--secondary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background-color: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.btn-danger {
+    background-color: var(--danger);
+    color: white;
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+}
+
+main {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 900px;
+}
+
+.card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    padding: 45px;
+    width: 100%;
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+h2 {
+    color: var(--secondary);
+    margin-bottom: 30px;
+    font-size: 1.7rem;
+    font-weight: 800;
+    position: relative;
+    padding-bottom: 12px;
+    display: inline-block;
+}
+
+h2::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 50px;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--primary-light) 100%);
+    border-radius: 2px;
+}
+
+.print-only-container h2::after {
+    display: none;
+}
+
+.print-only-container h2 {
+    position: static;
+    padding-bottom: 0;
+    margin-bottom: 1px;
+    display: block;
+    font-size: 14px;
+}
+
+.form-group {
+    margin-bottom: 22px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: var(--secondary);
+    font-size: 0.95rem;
+}
+
+input[type="text"],
+input[type="tel"],
+select {
+    width: 100%;
+    padding: 13px 18px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.95rem;
+    transition: all 0.2s ease;
+    background-color: #f8fafc;
+    color: var(--text-color);
+}
+
+input[type="text"]:focus,
+input[type="tel"]:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0, 150, 136, 0.15);
+}
+
+.error-message {
+    color: var(--danger);
+    font-size: 0.85rem;
+    margin-top: 6px;
+    display: none;
+    font-weight: 600;
+}
+
+.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 768px) {
+    .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* Companion Row Style */
+.companion-row {
+    display: grid;
+    grid-template-columns: 50px 2fr 2fr 2fr auto;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+    background-color: #f8fafc;
+    padding: 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.companion-index {
+    text-align: center;
+    font-weight: 800;
+    color: var(--primary);
+    font-size: 1.1rem;
+}
+
+
+/* Admin Dashboard Table */
+.admin-table-container {
+    overflow-x: auto;
+    margin-top: 20px;
+}
+
+table.admin-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin-top: 15px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+}
+
+table.admin-table th, table.admin-table td {
+    padding: 14px 16px;
+    text-align: right;
+    border-bottom: 1px solid var(--border-color);
+}
+
+table.admin-table th {
+    background-color: rgba(13, 148, 136, 0.06);
+    color: var(--secondary);
+    font-weight: 700;
+    border-bottom: 2px solid rgba(13, 148, 136, 0.15);
+}
+
+table.admin-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+table.admin-table tbody tr {
+    transition: background-color 0.2s ease;
+}
+
+table.admin-table tbody tr:hover td {
+    background-color: rgba(13, 148, 136, 0.03);
+}
+
+.actions-cell {
+    display: flex;
+    gap: 10px;
+}
+
+.tag-optional {
+    background-color: #e2e8f0;
+    color: #4a5568;
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 5px;
+}
+
+/* ==========================================================================
+   PRINT / PDF TEMPLATE STYLES
+   Designed specifically to replicate the 3-page PDF document
+   ========================================================================== */
+
+.print-only-container {
+    background-color: #ffffff;
+    color: #000000;
+    width: 210mm;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.print-only-container * {
+    font-family: 'Cairo', 'Arial', sans-serif !important;
+    letter-spacing: normal !important;
+    word-spacing: normal !important;
+}
+
+.pdf-page {
+    width: 210mm;
+    height: 296mm;
+    max-height: 296mm;
+    padding: 10mm 12mm; /* Reduced top/bottom padding to gain space */
+    box-sizing: border-box;
+    position: relative;
+    background-color: #ffffff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    overflow: hidden;
+    page-break-after: always;
+    page-break-inside: avoid;
+}
+
+.pdf-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #000000;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+}
+
+.pdf-header-right {
+    text-align: right;
+    width: 35%;
+}
+
+.pdf-header-right h2 {
+    font-size: 14px;
+    margin-bottom: 1px;
+    color: #000;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.pdf-header-right p {
+    font-size: 9px;
+    color: #000;
+    line-height: 1.2;
+}
+
+.pdf-header-center {
+    text-align: center;
+    width: 30%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.pdf-header-center img {
+    height: 38px;
+    margin-bottom: 2px;
+}
+
+.pdf-header-center div {
+    font-size: 9px;
+    color: #000;
+    font-weight: bold;
+}
+
+.pdf-header-left {
+    width: 35%;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.pdf-header-left img {
+    width: 70px;
+    height: 70px;
+}
+
+/* Document Title Bar */
+.doc-title-container {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.doc-title {
+    border: 2px solid #000;
+    padding: 3px 20px;
+    display: inline-block;
+    font-size: 14px;
+    font-weight: 800;
+    background-color: #fff;
+    letter-spacing: normal !important;
+}
+
+/* Fields & Grid Layouts for PDF */
+.pdf-grid {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.col-3 {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.col-2 {
+    grid-template-columns: repeat(2, 1fr);
+}
+
+.col-4 {
+    grid-template-columns: repeat(4, 1fr);
+}
+
+.pdf-field {
+    border: 1px solid #000000;
+    display: flex;
+    border-radius: 0px;
+    overflow: hidden;
+    height: 28px;
+    align-items: center;
+    background-color: #fff;
+}
+
+.pdf-field-label {
+    background-color: #f2f2f2;
+    padding: 0 8px;
+    font-weight: bold;
+    font-size: 9px;
+    border-left: 1px solid #000000;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 70px;
+    white-space: nowrap;
+    color: #000;
+}
+
+.pdf-field-value {
+    padding: 0 8px;
+    font-size: 10px;
+    font-weight: 600;
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    color: #000;
+    text-align: right;
+}
+
+/* PDF Section Titles */
+.pdf-section-title {
+    text-align: center;
+    background-color: #f2f2f2;
+    border: 1px solid #000000;
+    padding: 4px;
+    font-weight: bold;
+    font-size: 11px;
+    margin: 12px 0 12px 0;
+    border-radius: 0px;
+    color: #000;
+}
+
+/* PDF Tables */
+.pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+}
+
+.pdf-table th, .pdf-table td {
+    border: 1px solid #000000;
+    padding: 5px 6px;
+    text-align: center;
+    font-size: 11px;
+    height: 28px;
+}
+
+.pdf-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+    color: #000;
+}
+
+/* Inspection specific */
+.check-mark {
+    color: #000;
+    font-weight: bold;
+    font-size: 10px;
+}
+
+.inspection-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 6px;
+}
+
+.inspection-table th, .inspection-table td {
+    border: 1px solid #000000;
+    padding: 2px 4px;
+    text-align: center;
+    font-size: 9px;
+    height: 18px;
+}
+
+.inspection-table th {
+    background-color: #f2f2f2;
+    color: #000;
+}
+
+/* Footer Section */
+.pdf-footer {
+    border-top: 2px solid #000000;
+    padding-top: 6px;
+    margin-top: auto;
+}
+
+.pdf-footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.pdf-footer-text {
+    font-size: 8px;
+    text-align: right;
+    color: #000;
+}
+
+.pdf-footer-stamp {
+    width: 55px;
+    height: 55px;
+}
+
+.pdf-footer-bar {
+    background-color: #f2f2f2;
+    border: 1px solid #000000;
+    padding: 3px 6px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 7px;
+    color: #000;
+    font-weight: bold;
+}
+
+/* Contract conditions styling */
+.contract-text {
+    font-size: 13px;
+    line-height: 1.8;
+    text-align: justify;
+    margin-bottom: 16px;
+    color: #000;
+}
+
+.contract-parties {
+    font-weight: bold;
+    margin: 20px 0;
+    font-size: 13px;
+    color: #000;
+}
+
+.declaration-box {
+    border: 1px solid #000000;
+    padding: 8px;
+    background-color: #fff;
+    border-radius: 0px;
+    font-size: 9px;
+    line-height: 1.4;
+    margin-top: 8px;
+    color: #000;
+}
+
+/* Page Break settings for rendering */
+.page-break {
+    page-break-after: always;
+}
+
+/* QR Code styling */
+#qrcode img, #qrcode canvas {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* ==========================================================================
+   MOBILE & RESPONSIVE MEDIA QUERIES
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+        padding: 15px;
+    }
+
+    .logo-container {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .nav-links {
+        flex-direction: column;
+        width: 100%;
+        gap: 10px;
+    }
+
+    .nav-links .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    main {
+        padding: 15px 10px;
+    }
+
+    .card {
+        padding: 20px 15px;
+    }
+
+    .admin-table-container {
+        -webkit-overflow-scrolling: touch;
+        margin-top: 15px;
+    }
+    
+    table.admin-table th, table.admin-table td {
+        padding: 8px 10px;
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 600px) {
+    .companion-row {
+        grid-template-columns: auto 1fr;
+        grid-template-rows: auto auto auto auto;
+        gap: 8px;
+    }
+
+    .companion-row .companion-index {
+        grid-column: 1 / 3;
+        text-align: right;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 4px;
+        margin-bottom: 4px;
+    }
+
+    .companion-row div:nth-child(2),
+    .companion-row div:nth-child(3),
+    .companion-row div:nth-child(4) {
+        grid-column: 1 / 3;
+    }
+
+    .companion-row div:nth-child(5) {
+        grid-column: 1 / 3;
+        text-align: left;
+    }
+}
+

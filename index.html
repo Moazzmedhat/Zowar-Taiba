@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>بوابة السائقين | مؤسسة زوار طيبة للنقل البري</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- html2pdf.js for client-side PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <div class="logo-container">
+            <img class="logo-img" src="logo.png" alt="Logo">
+            <div class="header-title">
+                <h1>زوار طيبة للنقل البري</h1>
+            </div>
+        </div>
+        <div class="nav-links">
+            <button class="btn btn-secondary" id="btn-show-login">بوابة السائقين</button>
+            <button class="btn btn-secondary" id="btn-show-admin">لوحة التحكم (المدير)</button>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            
+            <!-- SECTION 1: LOGIN -->
+            <section id="sec-login" class="card">
+                <h2>تسجيل دخول السائق</h2>
+                <form id="form-login">
+                    <div class="form-group">
+                        <label for="login-id">رقم الهوية الوطنية / الإقامة</label>
+                        <input type="text" id="login-id" placeholder="مثال: 2529198794" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-plate">رقم لوحة السيارة</label>
+                        <input type="text" id="login-plate" placeholder="مثال: ا ط ل 1323" required>
+                    </div>
+                    <div id="login-error" class="error-message">بيانات السائق غير مطابقة، يرجى التحقق من رقم الهوية أو رقم اللوحة.</div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;">
+                        <span>دخول ومتابعة</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- SECTION 1B: ADMIN LOGIN -->
+            <section id="sec-admin-login" class="card hidden">
+                <h2>تسجيل دخول الإدارة</h2>
+                <form id="form-admin-login">
+                    <div class="form-group">
+                        <label for="admin-user">اسم المستخدم</label>
+                        <input type="text" id="admin-user" placeholder="أدخل اسم المستخدم" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="admin-pass">كلمة المرور</label>
+                        <input type="password" id="admin-pass" placeholder="أدخل كلمة المرور" required style="width: 100%; padding: 12px 16px; border: 1px solid var(--border-color); border-radius: 8px; font-family: 'Cairo', sans-serif; font-size: 1rem; transition: border-color 0.2s; background-color: #f7fafc;">
+                    </div>
+                    <div id="admin-login-error" class="error-message" style="color: var(--danger); font-size: 0.85rem; margin-top: 5px; display: none;">اسم المستخدم أو كلمة المرور غير صحيحة!</div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;">
+                        <span>دخول</span>
+                    </button>
+                </form>
+            </section>
+
+            <!-- SECTION 2: TRIP DATA FORM -->
+            <section id="sec-trip-form" class="card hidden">
+                <h2>إدخال بيانات الرحلة والركاب</h2>
+                <div id="driver-badge" style="background-color: #ebf8ff; padding: 15px; border-radius: 8px; margin-bottom: 25px; border: 1px solid #bee3f8;">
+                    <p>مرحباً بك سائقنا العزيز: <strong id="badge-name">...</strong></p>
+                    <p style="font-size: 0.9rem; color: #4a5568; margin-top: 5px;">سيارة: <span id="badge-car">...</span> | رقم اللوحة: <span id="badge-plate">...</span></p>
+                </div>
+                
+                <form id="form-trip">
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="trip-source">جهة القدوم</label>
+                            <input type="text" id="trip-source" placeholder="مثال: مطار جدة، فندق الإقامة" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="trip-destination">جهة الوصول</label>
+                            <input type="text" id="trip-destination" placeholder="مثال: فندق الإقامة، مكة المكرمة" required>
+                        </div>
+                    </div>
+
+                    <div class="grid-2">
+                        <div class="form-group">
+                            <label for="guest-name">اسم الضيف <span class="tag-optional">اختياري</span></label>
+                            <input type="text" id="guest-name" placeholder="مثال: محمد بسيوني شهاوي">
+                        </div>
+                        <div class="form-group">
+                            <label for="guest-phone">رقم جوال الضيف <span class="tag-optional">اختياري</span></label>
+                            <input type="tel" id="guest-phone" placeholder="مثال: +201094434621">
+                        </div>
+                    </div>
+
+                    <div style="margin-top: 30px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <h3 style="color: var(--secondary);">بيانات المرافقين (اختياري - حتى 12 مرافق)</h3>
+                        <button type="button" class="btn btn-secondary" id="btn-add-companion" style="padding: 6px 12px; font-size: 0.85rem;">+ إضافة مرافق</button>
+                    </div>
+
+                    <div id="companions-container">
+                        <!-- Dynamic companion rows go here -->
+                    </div>
+
+                    <div style="display: flex; gap: 15px; margin-top: 30px;">
+                        <button type="submit" class="btn btn-primary" style="flex: 1; justify-content: center;">
+                            <span>إصدار وطباعة كشف الركاب (PDF)</span>
+                        </button>
+                        <button type="button" id="btn-logout" class="btn btn-secondary">خروج</button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- SECTION 3: ADMIN CRUD PANEL -->
+            <section id="sec-admin" class="card hidden">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+                    <h2>لوحة التحكم بالمديرين</h2>
+                    <button class="btn btn-secondary" id="btn-download-json">تصدير البيانات المحدثة (JSON)</button>
+                </div>
+
+                <!-- Admin Add/Edit Form -->
+                <div id="admin-form-container" style="background-color: #f7fafc; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 30px;">
+                    <h3 id="admin-form-title" style="margin-bottom: 15px; color: var(--primary);">إضافة سائق وسيارة جديدة</h3>
+                    <form id="form-crud">
+                        <input type="hidden" id="crud-index" value="">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="crud-id">الهوية الوطنية / الإقامة</label>
+                                <input type="text" id="crud-id" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="crud-plate">رقم اللوحة</label>
+                                <input type="text" id="crud-plate" required>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="crud-name">اسم السائق</label>
+                                <input type="text" id="crud-name" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="crud-mobile">الجوال</label>
+                                <input type="text" id="crud-mobile" required>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="crud-model">موديل السيارة</label>
+                                <input type="text" id="crud-model" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="crud-color">لون السيارة</label>
+                                <input type="text" id="crud-color" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button type="submit" id="btn-save-crud" class="btn btn-primary">حفظ البيانات</button>
+                            <button type="button" id="btn-cancel-crud" class="btn btn-secondary">إلغاء</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Drivers Table -->
+                <h3 style="color: var(--secondary);">قائمة السائقين والسيارات المسجلة</h3>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>اسم السائق</th>
+                                <th>الهوية</th>
+                                <th>الجوال</th>
+                                <th>السيارة</th>
+                                <th>رقم اللوحة</th>
+                                <th>اللون</th>
+                                <th>العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-table-body">
+                            <!-- Drivers list injected here -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- ==========================================================================
+         PDF HTML TEMPLATE CONTAINER
+         ========================================================================== -->
+    <div style="position: fixed; left: -10000px; top: 0; width: 210mm; z-index: -9999;">
+        <div id="pdf-template-wrapper" class="print-only-container">
+            
+            <!-- PAGE 1: كشف الركاب -->
+            <div class="pdf-page page-break" id="pdf-page-1">
+                <div>
+                    <!-- Header -->
+                    <div class="pdf-header">
+                        <div class="pdf-header-right">
+                            <h2 style="color: #009688;">مؤسسة زوار طيبة</h2>
+                            <p>للنقل البري</p>
+                            <p>ترخيص رقم - <span dir="ltr" style="unicode-bidi: embed;">3500005546</span></p>
+                        </div>
+                        <div class="pdf-header-center">
+                            <img src="logo.png" alt="Logo">
+                            <div style="color: #009688; font-size: 8px;">Zowar Taiba Land Transport</div>
+                        </div>
+                        <div class="pdf-header-left">
+                            <img id="qrcode-p1" src="" alt="QR" style="width: 70px; height: 70px; display: block;">
+                        </div>
+                    </div>
+
+                    <!-- Doc Title -->
+                    <div class="doc-title-container">
+                        <div class="doc-title">كشف الركاب</div>
+                    </div>
+
+                    <!-- Trip General Metadata -->
+                    <div class="pdf-grid col-3">
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">اليوم</span>
+                            <span class="pdf-field-value" id="p1-day">الثلاثاء</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">التاريخ</span>
+                            <span class="pdf-field-value" id="p1-date">2026-06-30</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">رقم&nbsp;&nbsp;الحجز</span>
+                            <span class="pdf-field-value" id="p1-booking-id">1</span>
+                        </div>
+                    </div>
+
+                    <!-- Driver Section -->
+                    <div class="pdf-section-title">بيانات السائق</div>
+                    <div class="pdf-grid col-3">
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">السائق</span>
+                            <span class="pdf-field-value" id="p1-driver-name">السيد على السيد كامل</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">الهويه</span>
+                            <span class="pdf-field-value" id="p1-driver-id">2529198794</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">الجوال</span>
+                            <span class="pdf-field-value" id="p1-driver-phone">0596612154</span>
+                        </div>
+                    </div>
+
+                    <!-- Car Section -->
+                    <div class="pdf-grid col-3">
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">السيارة</span>
+                            <span class="pdf-field-value" id="p1-car-model">هيونداى ستاريا</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">اللون</span>
+                            <span class="pdf-field-value" id="p1-car-color">فضى</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">رقم&nbsp;&nbsp;اللوحه</span>
+                            <span class="pdf-field-value" id="p1-car-plate">ا ط ل 1323</span>
+                        </div>
+                    </div>
+
+                    <!-- Route Section -->
+                    <div class="pdf-grid col-2">
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">جهة&nbsp;&nbsp;القدوم</span>
+                            <span class="pdf-field-value" id="p1-source">مطار جدة</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">جهة&nbsp;&nbsp;الوصول</span>
+                            <span class="pdf-field-value" id="p1-destination">مكة المكرمة</span>
+                        </div>
+                    </div>
+
+                    <!-- Guest/Client Section -->
+                    <div class="pdf-grid col-3">
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">الضيف</span>
+                            <span class="pdf-field-value" id="p1-guest-name">محمد بسيونى شهاوى</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">الجوال</span>
+                            <span class="pdf-field-value" id="p1-guest-phone">+201094434621</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">رقم&nbsp;&nbsp;الرحله</span>
+                            <span class="pdf-field-value" id="p1-flight-no">SV388</span>
+                        </div>
+                    </div>
+
+                    <!-- Companions Section -->
+                    <div class="pdf-section-title">بيانات المرافقين</div>
+                    <table class="pdf-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 3%">#</th>
+                                <th style="width: 23%">الاسم</th>
+                                <th style="width: 14%">رقم الهوية</th>
+                                <th style="width: 10%">الجنسية</th>
+                                <th style="width: 3%">#</th>
+                                <th style="width: 23%">الاسم</th>
+                                <th style="width: 14%">رقم الهوية</th>
+                                <th style="width: 10%">الجنسية</th>
+                            </tr>
+                        </thead>
+                        <tbody id="p1-companions-tbody">
+                            <!-- 6 rows generated dynamically to match side-by-side format of 12 slots -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Footer stamp & note -->
+                <div class="pdf-footer">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <div style="font-size: 11px; font-weight: bold; color: #000; text-align: center; width: 100%;">
+                            **ملاحظة هامة**<br>
+                            في حالة عدم تطابق بيانات الضيف مع الاثبات تكن عرضه للجزاء وهذا تعهد منا بذلك<br>
+                            شاكرين لكم حسن تعاونكم معنا
+                        </div>
+                        <div>
+                            <img src="stamp.png" alt="الختم" style="width: 70px; height: 70px; object-fit: contain; display: block;">
+                        </div>
+                    </div>
+                    <!-- Contacts & Address Block -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 8px; margin-bottom: 5px; color: #000; border-top: 1px dashed #ccc; padding-top: 5px;">
+                        <span>📍 المدينة المنورة - الدائري الثاني طريق الملك عبدالله - خلف محطة بيحان</span>
+                        <span>✉️ zawartaiba@gmail.com | 📞 00966 50 484 5815</span>
+                    </div>
+                    <div class="pdf-footer-bar">
+                        <span>امر تشغيل شامل كشف الركاب تم إصداره إلكترونيا من السيستم</span>
+                        <span>Zowar Taiba Land Transport | C.R : 3500005546</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- PAGE 2: عقد نقل على الطرق البرية -->
+            <div class="pdf-page page-break" id="pdf-page-2">
+                <div>
+                    <!-- Header -->
+                    <div class="pdf-header">
+                        <div class="pdf-header-right">
+                            <h2 style="color: #009688;">مؤسسة زوار طيبة</h2>
+                            <p>للنقل البري</p>
+                            <p>ترخيص رقم - <span dir="ltr" style="unicode-bidi: embed;">3500005546</span></p>
+                        </div>
+                        <div class="pdf-header-center">
+                            <img src="logo.png" alt="Logo">
+                            <div style="color: #009688; font-size: 8px;">Zowar Taiba Land Transport</div>
+                        </div>
+                        <div class="pdf-header-left">
+                            <img id="qrcode-p2" src="" alt="QR" style="width: 70px; height: 70px; display: block;">
+                        </div>
+                    </div>
+
+                    <!-- Doc Title -->
+                    <div class="doc-title-container">
+                        <div class="doc-title">عقد نقل على الطرق البرية</div>
+                    </div>
+
+                    <!-- Date Metadata -->
+                    <div class="pdf-grid col-3">
+                        <div></div>
+                        <div></div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">التاريخ</span>
+                            <span class="pdf-field-value" id="p2-date">2026-06-30</span>
+                        </div>
+                    </div>
+
+                    <!-- Legal Intro -->
+                    <p class="contract-text">
+                        تم ابرام هذا العقد بين المتعاقدين بناء على المادة (39) التاسعة والثلاثون من اللائحة المنظمة لنشاط النقل المتخصص وتأجير وتوجيه الحافلات وبناء على الفقرة (1) من المادة (39) والتي تنص على أن يجب على الناقل ابرام عقد نقل مع الأطراف المحددين في المادة (40) قبل تنفيذ عمليات النقل على الطرق البرية وبما لا يخالف أحكام هذه اللائحة ووفقاً للآلية التي تحددها هيئة النقل وبناء على ما سبق تم ابرام عقد النقل بين الأطراف الآتية:
+                    </p>
+
+                    <div class="contract-parties">
+                        <p style="margin-bottom: 10px;">الطرف الأول / مؤسسة زوار طيبة للنقل البري ترخيص رقم - <span dir="ltr" style="unicode-bidi: embed;">3500005546</span></p>
+                        <p>الطرف الثاني / <span id="p2-guest-name">محمد بسيونى شهاوى</span></p>
+                    </div>
+
+                    <p class="contract-text" style="margin-top: 25px;">
+                        اتفق الطرفان على ان ينفذ الطرف الأول عملية النقل للطرف الثاني مع مرافقيه وذويهم من الموقع المحدد مسبقاً مع الطرف الثاني وتوصيلهم الى الجهه المحدده بالعقد.
+                    </p>
+
+                    <div class="pdf-grid col-2" style="margin-top: 25px;">
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">النقل&nbsp;&nbsp;من</span>
+                            <span class="pdf-field-value" id="p2-source">مطار جدة</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">وصولاً&nbsp;&nbsp;الى</span>
+                            <span class="pdf-field-value" id="p2-destination">مكة المكرمة</span>
+                        </div>
+                    </div>
+
+                    <p class="contract-text" style="margin-top: 30px;">
+                        في حال الغاء التعاقد لاي سبب شخصي او اسباب اخرى تتعلق في الحجوزات او الانظمة تكون سياسة الالغاء والاستبدال حسب نظام وزارة التجارة السعودي.
+                    </p>
+                    <p class="contract-text">
+                        في حال الحجز وتم الالغاء قبل موعد الرحلة باكثر من 24 ساعة يتم استرداد المبلغ كامل.
+                    </p>
+                    <p class="contract-text">
+                        في حالة طلب الطرف الثاني الحجز من خلال الموقع الالكتروني للمؤسسه يعتبر الحجز وموافقته على الشروط والاحكام بالموقع الالكتروني هو موافقة على هذا العقد لتنفيذ عملية النقل المتفق عليها مع الطرف الأول بواسطة حافلات المؤسسة المرخصة والمتوافقة مع الاشتراطات المقررة من هيئة النقل.
+                    </p>
+                </div>
+
+                    <!-- Contacts & Address Block -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 8px; margin-bottom: 5px; color: #000; border-top: 1px dashed #ccc; padding-top: 5px;">
+                        <span>📍 المدينة المنورة - الدائري الثاني طريق الملك عبدالله - خلف محطة بيحان</span>
+                        <span>✉️ zawartaiba@gmail.com | 📞 00966 50 484 5815</span>
+                    </div>
+                    <div class="pdf-footer">
+                        <div class="pdf-footer-bar">
+                            <span>امر تشغيل شامل كشف الركاب تم إصداره إلكترونيا من السيستم</span>
+                            <span>Zowar Taiba Land Transport | C.R : 3500005546</span>
+                        </div>
+                    </div>
+            </div>
+
+            <!-- PAGE 3: سجل الفحص اليومي للسيارة -->
+            <div class="pdf-page" id="pdf-page-3">
+                <div>
+                    <!-- Header -->
+                    <div class="pdf-header">
+                        <div class="pdf-header-right">
+                            <h2 style="color: #009688;">مؤسسة زوار طيبة</h2>
+                            <p>للنقل البري</p>
+                            <p>ترخيص رقم - <span dir="ltr" style="unicode-bidi: embed;">3500005546</span></p>
+                        </div>
+                        <div class="pdf-header-center">
+                            <img src="logo.png" alt="Logo">
+                            <div style="color: #009688; font-size: 8px;">Zowar Taiba Land Transport</div>
+                        </div>
+                        <div class="pdf-header-left">
+                            <img id="qrcode-p3" src="" alt="QR" style="width: 70px; height: 70px; display: block;">
+                        </div>
+                    </div>
+
+                    <!-- Doc Title -->
+                    <div class="doc-title-container">
+                        <div class="doc-title">سجل الفحص اليومي للسيارة</div>
+                    </div>
+
+                    <!-- Metadata -->
+                    <div class="pdf-grid col-3">
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">التاريخ</span>
+                            <span class="pdf-field-value" id="p3-date">2026-06-30</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">رقم&nbsp;&nbsp;الحجز</span>
+                            <span class="pdf-field-value" id="p3-booking-id">1</span>
+                        </div>
+                        <div style="visibility: hidden;"></div>
+                    </div>
+
+                    <div class="pdf-grid col-2">
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">السائق</span>
+                            <span class="pdf-field-value" id="p3-driver-name">السيد على السيد كامل</span>
+                        </div>
+                        <div class="pdf-field">
+                            <span class="pdf-field-label">رقم&nbsp;&nbsp;اللوحه</span>
+                            <span class="pdf-field-value" id="p3-car-plate">ا ط ل 1323</span>
+                        </div>
+                    </div>
+
+                    <!-- Table 1: Dashboard indicators -->
+                    <div style="font-weight: bold; font-size: 12px; margin: 10px 0 5px 0;">أولاً - فحص مؤشرات لوحة القيادة</div>
+                    <table class="inspection-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50%">البند</th>
+                                <th style="width: 15%">سليم</th>
+                                <th style="width: 15%">غير سليم</th>
+                                <th style="width: 20%">ملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>مؤشر&nbsp;&nbsp;الوقود</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>مؤشر&nbsp;&nbsp;الحرارة</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>مؤشر&nbsp;&nbsp;ضغط&nbsp;&nbsp;الزيت</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>لمبة&nbsp;&nbsp;فحص&nbsp;&nbsp;المحرك</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>ABS</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>لمبات&nbsp;&nbsp;التحذير</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Table 2: External checklist -->
+                    <div style="font-weight: bold; font-size: 12px; margin: 10px 0 5px 0;">ثانياً - الفحص الخارجي</div>
+                    <table class="inspection-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50%">البند</th>
+                                <th style="width: 15%">سليم</th>
+                                <th style="width: 15%">غير سليم</th>
+                                <th style="width: 20%">ملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>الإطارات&nbsp;&nbsp;وضغط&nbsp;&nbsp;الهواء</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>الأنوار&nbsp;&nbsp;الأمامية&nbsp;&nbsp;والخلفية</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>الإشارات&nbsp;&nbsp;التحذيرية</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>الزجاج&nbsp;&nbsp;والمرايا</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>عدم&nbsp;&nbsp;وجود&nbsp;&nbsp;تسريبات</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                        </tbody>
+                    </table>
+
+                    <!-- Table 3: Safety tools -->
+                    <div style="font-weight: bold; font-size: 12px; margin: 10px 0 5px 0;">ثالثاً - أدوات ومتطلبات الأمن والسلامة</div>
+                    <table class="inspection-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 50%">البند</th>
+                                <th style="width: 15%">سليم</th>
+                                <th style="width: 15%">غير سليم</th>
+                                <th style="width: 20%">ملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>طفاية&nbsp;&nbsp;حريق</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>مثلث&nbsp;&nbsp;تحذير</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>حقيبة&nbsp;&nbsp;إسعافات&nbsp;&nbsp;أولية</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>مطرقة&nbsp;&nbsp;كسر&nbsp;&nbsp;الزجاج</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                            <tr><td>أحزمة&nbsp;&nbsp;الأمان</td><td><span class="check-mark">✓</span></td><td></td><td></td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="declaration-box" style="text-align: right; margin-bottom: 20px;">
+                        <strong style="display: block; font-size: 11px; margin-bottom: 5px;">إقرار</strong>
+                        أقر&nbsp;أنا&nbsp;السائق&nbsp;أعلاه&nbsp;بأنني&nbsp;قمت&nbsp;بفحص&nbsp;الحافلة&nbsp;والتأكد&nbsp;من&nbsp;سلامتها&nbsp;وجاهزيتها&nbsp;قبل&nbsp;التشغيل.
+                    </div>
+
+                    <div style="text-align: left; margin-left: 20px; font-size: 11px; margin-bottom: 25px;">
+                        <span>اسم السائق - <span id="p3-driver-signature" style="border-bottom: 1px solid #000; padding: 0 30px; display: inline-block; min-width: 150px; text-align: center;">...</span></span>
+                    </div>
+
+                    <!-- Contacts & Address Block -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 8px; margin-bottom: 5px; color: #000; border-top: 1px dashed #ccc; padding-top: 5px;">
+                        <span>📍 المدينة المنورة - الدائري الثاني طريق الملك عبدالله - خلف محطة بيحان</span>
+                        <span>✉️ zawartaiba@gmail.com | 📞 00966 50 484 5815</span>
+                    </div>
+                    <div class="pdf-footer">
+                        <div class="pdf-footer-bar">
+                            <span>سجل&nbsp;فحص&nbsp;يومي&nbsp;للسيارة&nbsp;تم&nbsp;إصداره&nbsp;إلكترونيا&nbsp;من&nbsp;السيستم</span>
+                            <span>Zowar Taiba Land Transport | C.R : 3500005546</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

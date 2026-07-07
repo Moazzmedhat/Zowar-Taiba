@@ -159,10 +159,10 @@ document.addEventListener('DOMContentLoaded', () => {
         el.setAttribute('maxlength', '5'); // "أ ب ج" = 5 chars
         el.addEventListener('input', () => {
             const cursor = el.selectionStart;
-            // Strip spaces, keep only Arabic or English letters, limit 3
+            // Strip spaces, keep only Arabic letters (\u0621-\u064A) or English letters, limit 3
             const raw = el.value
                 .replace(/\s/g, '')
-                .replace(/[^a-zA-Z\u0600-\u06FF]/g, '')
+                .replace(/[^a-zA-Z\u0621-\u064A]/g, '')
                 .slice(0, 3);
             // Re-join with spaces between every letter
             el.value = raw.split('').join(' ');

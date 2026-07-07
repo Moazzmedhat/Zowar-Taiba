@@ -488,8 +488,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.error("Cloud Upload Error:", uploadErr);
                 alert("يتعذر الاتصال بالسحابة حالياً. تم حفظ كشف الركاب محلياً برمز QR احتياطي.");
                 
-                // Fallback QR code containing metadata summary
-                const fallbackQrData = `Booking:${bookingId}|ID:${currentDriver.nationalId}|Plate:${currentDriver.plateNumber.replace(/\s+/g, '')}`;
+                // Fallback QR code containing metadata summary in readable plain text
+                const fallbackQrData = `مؤسسة زوار طيبة للنقل البري\nكشف ركاب رقم الحجز: ${bookingId}\nالسائق: ${currentDriver.driverName}\nالهوية: ${currentDriver.nationalId}\nرقم اللوحة: ${currentDriver.plateNumber}`;
                 const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fallbackQrData)}`;
                 document.getElementById('qrcode-p1').src = fallbackQrUrl;
                 document.getElementById('qrcode-p2').src = fallbackQrUrl;

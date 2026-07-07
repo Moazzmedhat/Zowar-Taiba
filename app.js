@@ -89,17 +89,17 @@
         drivers.forEach((driver, idx) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>\</td>
-                <td>\</td>
-                <td>\</td>
-                <td>\</td>
-                <td>\</td>
-                <td>\</td>
+                <td>${driver.driverName}</td>
+                <td>${driver.nationalId}</td>
+                <td>${driver.mobile}</td>
+                <td>${driver.carModel}</td>
+                <td>${driver.plateNumber}</td>
+                <td>${driver.carColor}</td>
                 <td class="actions-cell">
-                    <button class="btn btn-secondary btn-edit" data-index="\" style="padding: 4px 8px; font-size: 0.8rem;">ØªØ¹Ø¯ÙŠÙ„</button>
-                    <button class="btn btn-danger btn-delete" data-index="\" style="padding: 4px 8px; font-size: 0.8rem;">Ø­Ø°Ù</button>
+                    <button class="btn btn-secondary btn-edit" data-index="${idx}" style="padding: 4px 8px; font-size: 0.8rem;">ØªØ¹Ø¯ÙŠÙ„</button>
+                    <button class="btn btn-danger btn-delete" data-index="${idx}" style="padding: 4px 8px; font-size: 0.8rem;">Ø­Ø°Ù</button>
                 </td>
-            \;
+            `;
             adminTableBody.appendChild(tr);
         });
 
@@ -287,26 +287,26 @@
         companions.forEach((comp, idx) => {
             const div = document.createElement('div');
             div.className = 'companion-rowCard';
-            div.innerHTML = 
+            div.innerHTML = `
                 <div class="companion-header">
-                    <h4>Ù…Ø±Ø§ÙÙ‚ Ø±Ù‚Ù… \</h4>
-                    <button type="button" class="btn-remove-comp" data-idx="\">Ø¥Ø²Ø§Ù„Ø©</button>
+                    <h4>Ù…Ø±Ø§ÙÙ‚ Ø±Ù‚Ù… ${idx + 1}</h4>
+                    <button type="button" class="btn-remove-comp" data-idx="${idx}">Ø¥Ø²Ø§Ù„Ø©</button>
                 </div>
                 <div class="companion-grid">
                     <div>
                         <label>Ø§Ù„Ø§Ø³Ù… Ø§Ù„ÙƒØ§Ù…Ù„</label>
-                        <input type="text" class="comp-name" data-idx="\" value="\" placeholder="Ø£Ø¯Ø®Ù„ Ø§Ø³Ù… Ø§Ù„Ù…Ø±Ø§ÙÙ‚ Ø§Ù„Ø«Ù†Ø§Ø¦ÙŠ Ø£Ùˆ Ø§Ù„Ø«Ù„Ø§Ø«ÙŠ" required>
+                        <input type="text" class="comp-name" data-idx="${idx}" value="${comp.name}" placeholder="Ø£Ø¯Ø®Ù„ Ø§Ø³Ù… Ø§Ù„Ù…Ø±Ø§ÙÙ‚ Ø§Ù„Ø«Ù†Ø§Ø¦ÙŠ Ø£Ùˆ Ø§Ù„Ø«Ù„Ø§Ø«ÙŠ" required>
                     </div>
                     <div>
                         <label>Ø±Ù‚Ù… Ø§Ù„Ù‡ÙˆÙŠØ© / Ø¬ÙˆØ§Ø² Ø§Ù„Ø³ÙØ±</label>
-                        <input type="text" class="comp-id" data-idx="\" value="\" placeholder="Ø£Ø¯Ø®Ù„ Ø±Ù‚Ù… Ø§Ù„Ù‡ÙˆÙŠØ© Ø£Ùˆ Ø§Ù„Ø¬ÙˆØ§Ø²" required>
+                        <input type="text" class="comp-id" data-idx="${idx}" value="${comp.id}" placeholder="Ø£Ø¯Ø®Ù„ Ø±Ù‚Ù… Ø§Ù„Ù‡ÙˆÙŠØ© Ø£Ùˆ Ø§Ù„Ø¬ÙˆØ§Ø²" required>
                     </div>
                     <div>
                         <label>Ø§Ù„Ø¬Ù†Ø³ÙŠØ©</label>
-                        <input type="text" class="comp-nationality" data-idx="\" value="\" placeholder="Ø£Ø¯Ø®Ù„ Ø§Ù„Ø¬Ù†Ø³ÙŠØ© (Ù…Ø«Ø§Ù„: Ù…ØµØ±ÙŠ)" required>
+                        <input type="text" class="comp-nationality" data-idx="${idx}" value="${comp.nationality}" placeholder="Ø£Ø¯Ø®Ù„ Ø§Ù„Ø¬Ù†Ø³ÙŠØ© (Ù…Ø«Ø§Ù„: Ù…ØµØ±ÙŠ)" required>
                     </div>
                 </div>
-            \;
+            `;
             companionsContainer.appendChild(div);
         });
 
@@ -374,7 +374,7 @@
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
-        const dateString = ${year}--;
+        const dateString = `${year}-${month}-${day}`;
         
         const days = ['Ø§Ù„Ø£Ø­Ø¯', 'Ø§Ù„Ø§Ø«Ù†ÙŠÙ†', 'Ø§Ù„Ø«Ù„Ø§Ø«Ø§Ø¡', 'Ø§Ù„Ø£Ø±Ø¨Ø¹Ø§Ø¡', 'Ø§Ù„Ø®Ù…ÙŠØ³', 'Ø§Ù„Ø¬Ù…Ø¹Ø©', 'Ø§Ù„Ø³Ø¨Øª'];
         const dayString = days[now.getDay()];
@@ -439,7 +439,7 @@
                 const pdfBlob = new Blob([byteArray], { type: 'application/pdf' });
 
                 // Upload to Vercel Blob Storage via our API endpoint
-                fetch(/api/upload?filename=booking-\.pdf, {
+                fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
                     method: 'POST',
                     body: pdfBlob
                 })
@@ -457,7 +457,7 @@
                     const finalPdf = pdfMake.createPdf(finalDoc);
 
                     // Download the final PDF with QR code
-                    finalPdf.download(Zowar-Taiba-Trip-Booking-\.pdf, () => {
+                    finalPdf.download(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`, () => {
                         statusNotice.remove();
                         alert("ØªÙ… Ø¥ØµØ¯Ø§Ø± ÙƒØ´Ù Ø§Ù„Ø±ÙƒØ§Ø¨ Ø¨Ù†Ø¬Ø§Ø­! Ø¹Ù†Ø¯ Ù…Ø³Ø­ Ø±Ù…Ø² Ø§Ù„Ù€ QR Ø³ÙŠÙØªØ­ Ø§Ù„Ù…Ù„Ù Ù…Ø¨Ø§Ø´Ø±Ø©.");
                     });
@@ -472,7 +472,7 @@
                         const finalByteArray = new Uint8Array(finalByteNumbers);
                         const finalBlob = new Blob([finalByteArray], { type: 'application/pdf' });
 
-                        fetch(/api/upload?filename=booking-\.pdf, {
+                        fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
                             method: 'POST',
                             body: finalBlob
                         }).catch(err => console.error('Re-upload error:', err));
@@ -483,10 +483,10 @@
                     alert("ÙŠØªØ¹Ø°Ø± Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø³Ø­Ø§Ø¨Ø© Ø­Ø§Ù„ÙŠØ§Ù‹. ØªÙ… Ø­ÙØ¸ ÙƒØ´Ù Ø§Ù„Ø±ÙƒØ§Ø¨ Ù…Ø­Ù„ÙŠØ§Ù‹ Ø¨Ø±Ù…Ø² QR Ø§Ø­ØªÙŠØ§Ø·ÙŠ.");
                     
                     // Fallback: generate PDF with text-only QR code
-                    const fallbackQrData = Ù…Ø¤Ø³Ø³Ø© Ø²ÙˆØ§Ø± Ø·ÙŠØ¨Ø© Ù„Ù„Ù†Ù‚Ù„ Ø§Ù„Ø¨Ø±ÙŠ - ÙƒØ´Ù Ø±ÙƒØ§Ø¨ Ø±Ù‚Ù… \ - Ø§Ù„Ø³Ø§Ø¦Ù‚: \;
+                    const fallbackQrData = `Ù…Ø¤Ø³Ø³Ø© Ø²ÙˆØ§Ø± Ø·ÙŠØ¨Ø© Ù„Ù„Ù†Ù‚Ù„ Ø§Ù„Ø¨Ø±ÙŠ - ÙƒØ´Ù Ø±ÙƒØ§Ø¨ Ø±Ù‚Ù… ${bookingId} - Ø§Ù„Ø³Ø§Ø¦Ù‚: ${currentDriver.driverName}`;
                     pdfData.qrUrl = fallbackQrData;
                     const fallbackDoc = buildPdfDocument(pdfData);
-                    pdfMake.createPdf(fallbackDoc).download(Zowar-Taiba-Trip-Booking-\.pdf, () => {
+                    pdfMake.createPdf(fallbackDoc).download(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`, () => {
                         statusNotice.remove();
                     });
                 });

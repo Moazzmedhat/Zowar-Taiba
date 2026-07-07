@@ -378,8 +378,9 @@ async function generateTripPdf(data) {
         // Draw cells
         for (let c = 0; c < 6; c++) {
             doc.rect(colX[c], yPos, colW[c], rowH, 'S');
-            // Odd cols = label (Arabic), even cols = value
-            addArabicText(doc, row[c], colX[c] + colW[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right', transparent: true });
+            // Center the text inside the cell (x = colX + colW / 2)
+            const centerX = colX[c] + colW[c] / 2;
+            addArabicText(doc, row[c], centerX, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'center', transparent: true });
         }
         yPos += rowH;
     }
@@ -393,7 +394,8 @@ async function generateTripPdf(data) {
     doc.rect(10, yPos, 190, 8, 'S');
     for (let c = 0; c < 4; c++) {
         doc.rect(routeX[c], yPos, routeCols[c], 8, 'S');
-        addArabicText(doc, routeVals[c], routeX[c] + routeCols[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right', transparent: true });
+        const centerX = routeX[c] + routeCols[c] / 2;
+        addArabicText(doc, routeVals[c], centerX, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'center', transparent: true });
     }
     yPos += 12;
 
@@ -405,7 +407,8 @@ async function generateTripPdf(data) {
     doc.rect(10, yPos, 190, 8, 'S');
     for (let c = 0; c < 6; c++) {
         doc.rect(guestX[c], yPos, guestCols[c], 8, 'S');
-        addArabicText(doc, guestVals[c], guestX[c] + guestCols[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right', transparent: true });
+        const centerX = guestX[c] + guestCols[c] / 2;
+        addArabicText(doc, guestVals[c], centerX, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'center', transparent: true });
     }
     yPos += 12;
 

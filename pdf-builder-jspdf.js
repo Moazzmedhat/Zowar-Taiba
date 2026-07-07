@@ -339,26 +339,32 @@ async function generateTripPdf(data) {
     drawSectionTitle(yPos, 'بيانات المرافقين');
     yPos += 9;
 
-    // Companions table header
+    // Companions table header (RTL structure: Right side represents items 1-6, Left side represents items 7-12)
     const hdrH = 7;
-    const compCols = [8, 44, 28, 15, 8, 44, 28, 15]; // widths in mm
-    const compHdrs = ['#', 'الاسم', 'رقم الهوية', 'الجنسية', '#', 'الاسم', 'رقم الهوية', 'الجنسية'];
+    const compCols = [15, 28, 44, 8, 15, 28, 44, 8]; // widths in mm (Left block: 15, 28, 44, 8 | Right block: 15, 28, 44, 8)
+    const compHdrs = ['الجنسية', 'رقم الهوية', 'الاسم', '#', 'الجنسية', 'رقم الهوية', 'الاسم', '#'];
     doc.setFillColor(0, 150, 136);
     let cx = 10;
     for (let c = 0; c < compCols.length; c++) {
         doc.rect(cx, yPos, compCols[c], hdrH, 'F');
-        addArabicText(doc, compHdrs[c], cx + compCols[c] - 1, yPos + 5, { fontSize: 8, color: '#ffffff', fontStyle: 'bold', align: 'right' });
+        const isCenterCol = (c === 3 || c === 7);
+        addArabicText(doc, compHdrs[c], cx + compCols[c] - (isCenterCol ? compCols[c]/2 : 1), yPos + 5, { 
+            fontSize: 8, 
+            color: '#ffffff', 
+            fontStyle: 'bold', 
+            align: isCenterCol ? 'center' : 'right' 
+        });
         cx += compCols[c];
     }
     yPos += hdrH;
 
     // Companion rows
     for (let i = 0; i < 6; i++) {
-        const left = data.companions[i] || { name: '', id: '', nationality: '' };
-        const right = data.companions[i + 6] || { name: '', id: '', nationality: '' };
+        const left = data.companions[i] || { name: '', id: '', nationality: '' }; // Items 1-6
+        const right = data.companions[i + 6] || { name: '', id: '', nationality: '' }; // Items 7-12
         const rowVals = [
-            String(i + 1), left.name, left.id, left.nationality,
-            String(i + 7), right.name, right.id, right.nationality
+            right.nationality, right.id, right.name, String(i + 7), // Left side of page (items 7-12)
+            left.nationality, left.id, left.name, String(i + 1)     // Right side of page (items 1-6)
         ];
         const rH = 7;
         cx = 10;
@@ -366,7 +372,12 @@ async function generateTripPdf(data) {
         for (let c = 0; c < compCols.length; c++) {
             doc.rect(cx, yPos, compCols[c], rH, 'S');
             if (rowVals[c]) {
-                addArabicText(doc, rowVals[c], cx + compCols[c] - 1, yPos + 5, { fontSize: 7.5, color: '#000000', align: 'right' });
+                const isCenterCol = (c === 3 || c === 7);
+                addArabicText(doc, rowVals[c], cx + compCols[c] - (isCenterCol ? compCols[c]/2 : 1), yPos + 5, { 
+                    fontSize: 7.5, 
+                    color: '#000000', 
+                    align: isCenterCol ? 'center' : 'right' 
+                });
             }
             cx += compCols[c];
         }

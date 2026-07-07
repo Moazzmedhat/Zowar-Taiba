@@ -9,6 +9,15 @@
     <script src="https://unpkg.com/pdfmake-rtl/build/pdfmake.min.js"></script>
     <script src="https://unpkg.com/pdfmake-rtl/build/vfs_fonts.js"></script>
     <script>
+        // Global error tracking for easy mobile debugging
+        window.onerror = function(message, source, lineno, colno, error) {
+            alert("JS Error:\n" + message + "\nLine: " + lineno + "\nSource: " + source);
+            return false;
+        };
+        window.addEventListener('unhandledrejection', function(event) {
+            alert("Unhandled Promise Rejection:\n" + event.reason);
+        });
+
         // Load and register Cairo Arabic font for pdfmake-rtl
         (async function() {
             try {

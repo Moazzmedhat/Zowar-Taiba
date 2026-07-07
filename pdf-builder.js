@@ -1,17 +1,26 @@
-// Helper: Convert an image URL to a base64 data URL
+// Helper: Convert an image URL to a base64 data URL with safety fallback
 function imageToBase64(url) {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
         const img = new Image();
-        img.crossOrigin = 'anonymous';
         img.onload = () => {
-            const canvas = document.createElement('canvas');
-            canvas.width = img.naturalWidth;
-            canvas.height = img.naturalHeight;
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0);
-            resolve(canvas.toDataURL('image/png'));
+            try {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                resolve(canvas.toDataURL('image/png'));
+            } catch (canvasErr) {
+                console.warn('Canvas conversion failed for: ' + url, canvasErr);
+                resolve(null); // Resolve with null instead of rejecting
+            }
         };
-        img.onerror = reject;
+        img.onerror = () => {
+            console.warn('Image load error: ' + url);
+            resolve(null); // Resolve with null on load failure to prevent script hang
+        };
+        // Try anonymous CORS first, fallback to standard if it fails
+        img.crossOrigin = 'anonymous';
         img.src = url;
     });
 }
@@ -24,9 +33,13 @@ let stampBase64 = null;
 async function preloadImages() {
     try {
         logoBase64 = await imageToBase64('logo.png');
+    } catch (e) {
+        logoBase64 = null;
+    }
+    try {
         stampBase64 = await imageToBase64('stamp.png');
-    } catch (err) {
-        console.error('Failed to preload images for PDF:', err);
+    } catch (e) {
+        stampBase64 = null;
     }
 }
 

@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بوابة السائقين | مؤسسة زوار طيبة للنقل البري</title>
     <link rel="stylesheet" href="style.css">
-    <!-- html2pdf.js for client-side PDF generation -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- pdfmake-rtl for client-side PDF generation (Arabic RTL + viewport-independent) -->
+    <script src="https://unpkg.com/pdfmake-rtl/build/pdfmake.min.js"></script>
+    <script src="https://unpkg.com/pdfmake-rtl/build/vfs_fonts.js"></script>
 </head>
 <body>
 
@@ -190,7 +191,7 @@
     <!-- ==========================================================================
          PDF HTML TEMPLATE CONTAINER
          ========================================================================== -->
-    <div id="pdf-offscreen-wrapper" style="position: fixed; left: -10000px; top: 0; width: 210mm; z-index: -9999;">
+    <div style="position: fixed; left: -10000px; top: 0; width: 210mm; z-index: -9999;">
         <div id="pdf-template-wrapper" class="print-only-container">
             
             <!-- PAGE 1: كشف الركاب -->
@@ -557,6 +558,7 @@
         </div>
     </div>
 
+    <script src="pdf-builder.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

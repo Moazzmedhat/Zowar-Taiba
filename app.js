@@ -337,6 +337,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // PDF GENERATION & RANDOM NUMBER LOGIC
     // ==========================================
 
+    // Preload images for PDF on page load
+    preloadImages();
+
     formTrip.addEventListener('submit', (e) => {
         e.preventDefault();
 
@@ -354,75 +357,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
         const dayString = days[now.getDay()];
 
-        const addSpacing = (str) => {
-            if (!str) return '';
-            // Replaces multiple spaces with double non-breaking spaces for PDF boxes
-            return str.toString().trim().split(/\s+/).join('\u00A0\u00A0');
-        };
-
-        // 3. Populate Page 1 values
-        document.getElementById('p1-day').textContent = addSpacing(dayString);
-        document.getElementById('p1-date').textContent = addSpacing(dateString);
-        document.getElementById('p1-booking-id').textContent = addSpacing(bookingId);
-        document.getElementById('p1-driver-name').textContent = addSpacing(currentDriver.driverName);
-        document.getElementById('p1-driver-id').textContent = addSpacing(currentDriver.nationalId);
-        document.getElementById('p1-driver-phone').textContent = addSpacing(currentDriver.mobile);
-        document.getElementById('p1-car-model').textContent = addSpacing(currentDriver.carModel);
-        document.getElementById('p1-car-color').textContent = addSpacing(currentDriver.carColor);
-        document.getElementById('p1-car-plate').textContent = addSpacing(currentDriver.plateNumber);
-        document.getElementById('p1-source').textContent = addSpacing(tripSource.value);
-        document.getElementById('p1-destination').textContent = addSpacing(tripDestination.value);
-        
         // Handle optional Guest Name and phone
         const gName = guestNameInput.value.trim() || "غير محدد";
         const gPhone = guestPhoneInput.value.trim() || "غير محدد";
-        document.getElementById('p1-guest-name').textContent = addSpacing(gName);
-        document.getElementById('p1-guest-phone').textContent = addSpacing(gPhone);
-        document.getElementById('p1-flight-no').textContent = addSpacing(flightNo);
-
-        // 4. Populate Page 2 values
-        document.getElementById('p2-date').textContent = addSpacing(dateString);
-        document.getElementById('p2-guest-name').textContent = addSpacing(gName);
-        document.getElementById('p2-source').textContent = addSpacing(tripSource.value);
-        document.getElementById('p2-destination').textContent = addSpacing(tripDestination.value);
-
-        // 5. Populate Page 3 values
-        document.getElementById('p3-date').textContent = addSpacing(dateString);
-        document.getElementById('p3-booking-id').textContent = addSpacing(bookingId);
-        document.getElementById('p3-driver-name').textContent = addSpacing(currentDriver.driverName);
-        document.getElementById('p3-car-plate').textContent = addSpacing(currentDriver.plateNumber);
-        document.getElementById('p3-driver-signature').textContent = addSpacing(currentDriver.driverName);
-
-        // 6. Build Companions side-by-side table rows
-        const compTbody = document.getElementById('p1-companions-tbody');
-        compTbody.innerHTML = '';
-        
-        // Output exactly 6 rows to fill the template layout nicely
-        for (let rowIdx = 0; rowIdx < 6; rowIdx++) {
-            const compLeftIdx = rowIdx;          // Indices 0, 1, 2, 3, 4, 5 (for column 1-6)
-            const compRightIdx = rowIdx + 6;     // Indices 6, 7, 8, 9, 10, 11 (for column 7-12)
-
-            const leftComp = companions[compLeftIdx] || { name: '', id: '', nationality: '' };
-            const rightComp = companions[compRightIdx] || { name: '', id: '', nationality: '' };
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${compLeftIdx + 1}</td>
-                <td>${leftComp.name}</td>
-                <td>${leftComp.id}</td>
-                <td>${leftComp.nationality}</td>
-                <td>${compRightIdx + 1}</td>
-                <td>${rightComp.name}</td>
-                <td>${rightComp.id}</td>
-                <td>${rightComp.nationality}</td>
-            `;
-            compTbody.appendChild(tr);
-        }
-
-        // Put empty/placeholder image for QR initially
-        document.getElementById('qrcode-p1').src = '';
-        document.getElementById('qrcode-p2').src = '';
-        document.getElementById('qrcode-p3').src = '';
 
         // Show upload indicator
         const statusNotice = document.createElement('div');
@@ -436,114 +373,79 @@ document.addEventListener('DOMContentLoaded', () => {
         statusNotice.style.borderRadius = '8px';
         statusNotice.style.zIndex = '99999';
         statusNotice.style.fontWeight = 'bold';
-        statusNotice.textContent = "جاري رفع الملف وإصدار رمز الـ QR... يرجى الانتظار";
+        statusNotice.textContent = "جاري إصدار كشف الركاب... يرجى الانتظار";
         document.body.appendChild(statusNotice);
 
-        const opt = {
-            margin:       0,
-            filename:     `Zowar-Taiba-Trip-Booking-${bookingId}.pdf`,
-            image:        { type: 'jpeg', quality: 0.98 },
-            html2canvas:  { scale: 2, useCORS: true, letterRendering: false },
-            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-            pagebreak:    { mode: ['css', 'legacy'] }
+        // Build data object for pdfmake
+        const pdfData = {
+            bookingId,
+            flightNo,
+            dateString,
+            dayString,
+            driverName: currentDriver.driverName,
+            nationalId: currentDriver.nationalId,
+            mobile: currentDriver.mobile,
+            carModel: currentDriver.carModel,
+            carColor: currentDriver.carColor,
+            plateNumber: currentDriver.plateNumber,
+            source: tripSource.value,
+            destination: tripDestination.value,
+            guestName: gName,
+            guestPhone: gPhone,
+            companions: companions,
+            qrUrl: null // Will be set after upload
         };
 
-        // Helper: temporarily bring the offscreen wrapper on-page for accurate rendering
-        const offscreenWrapper = document.getElementById('pdf-offscreen-wrapper');
-        function prepareForRender() {
-            offscreenWrapper.style.position = 'absolute';
-            offscreenWrapper.style.left = '0';
-            offscreenWrapper.style.top = '0';
-            offscreenWrapper.style.width = '794px';
-            offscreenWrapper.style.opacity = '0';
-            offscreenWrapper.style.zIndex = '-9999';
-            offscreenWrapper.style.overflow = 'visible';
-            // Force browser to recompute layout
-            offscreenWrapper.offsetHeight;
-        }
-        function restoreAfterRender() {
-            offscreenWrapper.style.position = 'fixed';
-            offscreenWrapper.style.left = '-10000px';
-            offscreenWrapper.style.top = '0';
-            offscreenWrapper.style.width = '210mm';
-            offscreenWrapper.style.opacity = '1';
-            offscreenWrapper.style.zIndex = '-9999';
-            offscreenWrapper.style.overflow = '';
-        }
+        // Step 1: Generate a draft PDF (without QR) to upload to Vercel Blob
+        const draftDoc = buildPdfDocument(pdfData);
+        const draftPdf = pdfMake.createPdf(draftDoc);
 
-        // Bring on-page, wait for layout, then render first draft PDF
-        prepareForRender();
-        setTimeout(() => {
-            html2pdf().set(opt).from(pdfTemplate).toPdf().get('pdf').then(function(pdfObj) {
-                const pdfBlob = pdfObj.output('blob');
+        draftPdf.getBlob((pdfBlob) => {
+            // Upload to Vercel Blob Storage via our API endpoint
+            fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
+                method: 'POST',
+                body: pdfBlob
+            })
+            .then(response => {
+                if (!response.ok) throw new Error("Vercel Blob upload response failed");
+                return response.json();
+            })
+            .then(data => {
+                // Vercel Blob returns the direct permanent URL in the 'url' property
+                const publicUrl = data.url;
                 
-                // Upload to Vercel Blob Storage via our API endpoint
-                fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
-                    method: 'POST',
-                    body: pdfBlob
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error("Vercel Blob upload response failed");
-                    return response.json();
-                })
-                .then(data => {
-                    // Vercel Blob returns the direct permanent URL in the 'url' property
-                    const publicUrl = data.url;
-                    
-                    // Now render the QR codes using this public URL
-                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`;
-                    document.getElementById('qrcode-p1').src = qrUrl;
-                    document.getElementById('qrcode-p2').src = qrUrl;
-                    document.getElementById('qrcode-p3').src = qrUrl;
+                // Step 2: Re-generate the PDF with QR code pointing to the uploaded PDF
+                pdfData.qrUrl = publicUrl;
+                const finalDoc = buildPdfDocument(pdfData);
+                const finalPdf = pdfMake.createPdf(finalDoc);
 
-                    // Wait slightly for QR images to load, then re-render the final PDF
-                    setTimeout(() => {
-                        prepareForRender();
-                        setTimeout(() => {
-                            html2pdf().set(opt).from(pdfTemplate).save().then(() => {
-                                restoreAfterRender();
-                                statusNotice.remove();
-                                alert("تم إصدار كشف الركاب بنجاح! عند مسح رمز الـ QR سيفتح الملف مباشرة.");
-                            }).catch(pdfErr => {
-                                restoreAfterRender();
-                                statusNotice.remove();
-                                console.error("PDF Final Render Error:", pdfErr);
-                                alert("خطأ أثناء إصدار كشف الركاب النهائي: " + pdfErr.message);
-                            });
-                        }, 100);
-                    }, 800);
-                })
-                .catch(uploadErr => {
-                    console.error("Cloud Upload Error:", uploadErr);
-                    alert("يتعذر الاتصال بالسحابة حالياً. تم حفظ كشف الركاب محلياً برمز QR احتياطي.");
-                    
-                    // Fallback QR code containing metadata summary in readable plain text
-                    const fallbackQrData = `مؤسسة زوار طيبة للنقل البري\nكشف ركاب رقم الحجز: ${bookingId}\nالسائق: ${currentDriver.driverName}\nالهوية: ${currentDriver.nationalId}\nرقم اللوحة: ${currentDriver.plateNumber}`;
-                    const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fallbackQrData)}`;
-                    document.getElementById('qrcode-p1').src = fallbackQrUrl;
-                    document.getElementById('qrcode-p2').src = fallbackQrUrl;
-                    document.getElementById('qrcode-p3').src = fallbackQrUrl;
-                    
-                    setTimeout(() => {
-                        prepareForRender();
-                        setTimeout(() => {
-                            html2pdf().set(opt).from(pdfTemplate).save().then(() => {
-                                restoreAfterRender();
-                                statusNotice.remove();
-                            }).catch(() => {
-                                restoreAfterRender();
-                                statusNotice.remove();
-                            });
-                        }, 100);
-                    }, 800);
+                // Download the final PDF with QR code
+                finalPdf.download(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`, () => {
+                    statusNotice.remove();
+                    alert("تم إصدار كشف الركاب بنجاح! عند مسح رمز الـ QR سيفتح الملف مباشرة.");
                 });
-            }).catch(compileErr => {
-                restoreAfterRender();
-                statusNotice.remove();
-                console.error("PDF compilation error:", compileErr);
-                alert("حدث خطأ أثناء إصدار كشف الركاب: " + compileErr.message);
+
+                // Also re-upload the final version with QR code (overwrite)
+                finalPdf.getBlob((finalBlob) => {
+                    fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
+                        method: 'POST',
+                        body: finalBlob
+                    }).catch(err => console.error('Re-upload error:', err));
+                });
+            })
+            .catch(uploadErr => {
+                console.error("Cloud Upload Error:", uploadErr);
+                alert("يتعذر الاتصال بالسحابة حالياً. تم حفظ كشف الركاب محلياً برمز QR احتياطي.");
+                
+                // Fallback: generate PDF with text-only QR code
+                const fallbackQrData = `مؤسسة زوار طيبة للنقل البري - كشف ركاب رقم ${bookingId} - السائق: ${currentDriver.driverName}`;
+                pdfData.qrUrl = fallbackQrData;
+                const fallbackDoc = buildPdfDocument(pdfData);
+                pdfMake.createPdf(fallbackDoc).download(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`, () => {
+                    statusNotice.remove();
+                });
             });
-        }, 150);
+        });
     });
 
 });

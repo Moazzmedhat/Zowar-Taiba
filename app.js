@@ -45,6 +45,111 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnAddCompanion = document.getElementById('btn-add-companion');
     const btnLogout = document.getElementById('btn-logout');
 
+    // ==========================================
+    // SAUDI CITIES SEARCHABLE DROPDOWN
+    // ==========================================
+    const SAUDI_CITIES = [
+        'مكة المكرمة','المدينة المنورة','الرياض','جدة','الطائف','الدمام','الخبر','الظهران',
+        'تبوك','بريدة','أبها','خميس مشيط','حائل','نجران','جازان','الجبيل','ينبع','الأحساء',
+        'القطيف','عرعر','سكاكا','الباحة','بيشة','الخرج','المجمعة','القصيم','الدوادمي',
+        'رابغ','الليث','القنفذة','تيماء','العُلا','وادي الدواسر','شرورة','الزلفي',
+        'رفحاء','طريف','عفيف','الرس','المذنب','الدرعية','الدلم','حوطة بني تميم',
+        'المخواة','بلجرشي','المندق','العقيق','قلوة','ضمد','أحد رفيدة','محايل عسير',
+        'صامطة','الحرث','أبو عريش','صبيا','بيش','فرسان','ضباء','أملج','الوجه',
+        'حقل','شرما','البدع','مدين','مطار الملك عبدالعزيز الدولي','مطار الملك خالد الدولي',
+        'مطار الأمير محمد بن عبدالعزيز','مطار الملك فهد الدولي','مطار الملك عبدالله بن عبدالعزيز',
+        'المسجد الحرام','المسجد النبوي الشريف','منى','عرفات','مزدلفة','الجعرانة'
+    ];
+
+    function initCityDropdown(searchInputId, hiddenInputId, listId) {
+        const searchEl  = document.getElementById(searchInputId);
+        const hiddenEl  = document.getElementById(hiddenInputId);
+        const listEl    = document.getElementById(listId);
+        if (!searchEl || !hiddenEl || !listEl) return;
+
+        let activeIdx = -1;
+
+        function highlight(text, query) {
+            if (!query) return text;
+            const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            return text.replace(new RegExp(`(${escaped})`, 'gi'), '<mark>$1</mark>');
+        }
+
+        function renderList(query) {
+            const q = query.trim();
+            const filtered = q
+                ? SAUDI_CITIES.filter(c => c.includes(q))
+                : SAUDI_CITIES;
+
+            listEl.innerHTML = '';
+            activeIdx = -1;
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = '<li class="no-result">لا توجد نتائج</li>';
+            } else {
+                filtered.forEach((city) => {
+                    const li = document.createElement('li');
+                    li.innerHTML = highlight(city, q);
+                    li.addEventListener('mousedown', (e) => {
+                        e.preventDefault();
+                        selectCity(city);
+                    });
+                    listEl.appendChild(li);
+                });
+            }
+            listEl.classList.add('open');
+        }
+
+        function selectCity(city) {
+            searchEl.value  = city;
+            hiddenEl.value  = city;
+            searchEl.classList.add('selected');
+            listEl.classList.remove('open');
+            activeIdx = -1;
+        }
+
+        function closeList() {
+            listEl.classList.remove('open');
+            activeIdx = -1;
+        }
+
+        searchEl.addEventListener('focus', () => renderList(searchEl.value));
+        searchEl.addEventListener('input', () => {
+            hiddenEl.value = '';
+            searchEl.classList.remove('selected');
+            renderList(searchEl.value);
+        });
+
+        searchEl.addEventListener('keydown', (e) => {
+            const items = listEl.querySelectorAll('li:not(.no-result)');
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                activeIdx = Math.min(activeIdx + 1, items.length - 1);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                activeIdx = Math.max(activeIdx - 1, 0);
+            } else if (e.key === 'Enter' && activeIdx >= 0) {
+                e.preventDefault();
+                selectCity(items[activeIdx].textContent);
+                return;
+            } else if (e.key === 'Escape') {
+                closeList();
+                return;
+            }
+            items.forEach((li, i) => li.classList.toggle('active', i === activeIdx));
+            if (activeIdx >= 0) items[activeIdx].scrollIntoView({ block: 'nearest' });
+        });
+
+        searchEl.addEventListener('blur', () => {
+            setTimeout(closeList, 150);
+            // If typed text doesn't match a selection, clear hidden
+            if (!hiddenEl.value) searchEl.value = '';
+        });
+    }
+
+    initCityDropdown('trip-source-search', 'trip-source', 'source-list');
+    initCityDropdown('trip-dest-search',   'trip-destination', 'dest-list');
+
     // DOM Elements - CRUD Admin inputs
     const crudIndex = document.getElementById('crud-index');
     const crudId = document.getElementById('crud-id');

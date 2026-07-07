@@ -210,6 +210,89 @@ select:focus {
     box-shadow: 0 0 0 3px rgba(0, 150, 136, 0.15);
 }
 
+/* ---- City Searchable Dropdown ---- */
+.city-dropdown-wrapper {
+    position: relative;
+}
+
+.city-search-input {
+    width: 100%;
+    padding: 13px 18px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.95rem;
+    background-color: #f8fafc;
+    color: var(--text-color);
+    transition: all 0.2s ease;
+    box-sizing: border-box;
+    cursor: pointer;
+}
+
+.city-search-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(0, 150, 136, 0.15);
+}
+
+.city-search-input.selected {
+    border-color: var(--primary);
+    background-color: #ffffff;
+}
+
+.city-dropdown-list {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border: 1.5px solid var(--primary);
+    border-radius: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+    z-index: 9999;
+    list-style: none;
+    margin: 0;
+    padding: 4px 0;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+}
+
+.city-dropdown-list.open {
+    display: block;
+}
+
+.city-dropdown-list li {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 0.93rem;
+    color: var(--text-color);
+    transition: background 0.15s;
+    text-align: right;
+}
+
+.city-dropdown-list li:hover,
+.city-dropdown-list li.active {
+    background: rgba(0, 150, 136, 0.1);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.city-dropdown-list li mark {
+    background: rgba(0, 150, 136, 0.25);
+    color: var(--primary);
+    border-radius: 2px;
+    padding: 0 1px;
+}
+
+.city-dropdown-list li.no-result {
+    color: #aaa;
+    cursor: default;
+    font-size: 0.88rem;
+    text-align: center;
+}
+
 .error-message {
     color: var(--danger);
     font-size: 0.85rem;

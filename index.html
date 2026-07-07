@@ -79,12 +79,20 @@
                 <form id="form-trip">
                     <div class="grid-2">
                         <div class="form-group">
-                            <label for="trip-source">جهة القدوم</label>
-                            <input type="text" id="trip-source" placeholder="مثال: مطار جدة، فندق الإقامة" required>
+                            <label>جهة القدوم</label>
+                            <div class="city-dropdown-wrapper" id="source-wrapper">
+                                <input type="text" id="trip-source-search" class="city-search-input" placeholder="ابحث عن مدينة..." autocomplete="off">
+                                <input type="hidden" id="trip-source" required>
+                                <ul class="city-dropdown-list" id="source-list"></ul>
+                            </div>
                         </div>
                         <div class="form-group">
-                            <label for="trip-destination">جهة الوصول</label>
-                            <input type="text" id="trip-destination" placeholder="مثال: فندق الإقامة، مكة المكرمة" required>
+                            <label>جهة الوصول</label>
+                            <div class="city-dropdown-wrapper" id="dest-wrapper">
+                                <input type="text" id="trip-dest-search" class="city-search-input" placeholder="ابحث عن مدينة..." autocomplete="off">
+                                <input type="hidden" id="trip-destination" required>
+                                <ul class="city-dropdown-list" id="dest-list"></ul>
+                            </div>
                         </div>
                     </div>
 

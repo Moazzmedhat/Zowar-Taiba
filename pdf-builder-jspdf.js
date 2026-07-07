@@ -43,9 +43,13 @@ function renderArabicToCanvas(text, fontSize, color, fontWeight) {
         const ctx = canvas.getContext('2d');
         if (!ctx) return null;
         
-        // Fill canvas with white background (JPEG doesn't support transparency, so matching the white page)
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, textWidthPx, textHeightPx);
+        const isWhiteText = (color && (color.toLowerCase() === '#ffffff' || color.toLowerCase() === '#fff' || color.toLowerCase() === 'white'));
+        
+        if (!isWhiteText) {
+            // Fill canvas with white background for black text to allow high JPEG compression
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, textWidthPx, textHeightPx);
+        }
         
         ctx.font = fontStr;
         ctx.fillStyle = color || '#000000';
@@ -55,8 +59,9 @@ function renderArabicToCanvas(text, fontSize, color, fontWeight) {
         ctx.fillText(text, textWidthPx - 5, textHeightPx / 2);
         
         return {
-            // Use compressed JPEG instead of PNG to shrink file size by 90% while keeping high resolution
-            dataUrl: canvas.toDataURL('image/jpeg', 0.85),
+            // Use transparent PNG for white text (drawn on teal headers), JPEG for normal black text to keep file size tiny
+            dataUrl: isWhiteText ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.85),
+            format: isWhiteText ? 'PNG' : 'JPEG',
             widthPx: textWidthPx,
             heightPx: textHeightPx
         };
@@ -120,7 +125,7 @@ function addArabicText(doc, text, xMm, yMm, options = {}) {
         // Y is baseline in jsPDF; center the image vertically around it
         const drawY = yMm - heightMm * 0.7;
         
-        doc.addImage(rendered.dataUrl, 'JPEG', drawX, drawY, widthMm, heightMm);
+        doc.addImage(rendered.dataUrl, rendered.format, drawX, drawY, widthMm, heightMm);
         return widthMm;
     } catch (err) {
         console.error("addArabicText error:", err);

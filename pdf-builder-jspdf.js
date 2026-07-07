@@ -200,6 +200,19 @@ function addArabicParagraph(doc, text, xMm, yMm, options = {}) {
     return y;
 }
 
+/**
+ * Split plate number into numbers and letters.
+ * Matches digits (including Arabic/Indic digits) for the number part, and uses everything else as letters.
+ */
+function splitPlateNumber(plateStr) {
+    if (!plateStr) return { numbers: '-', letters: '-' };
+    // Match digits (0-9 and Arabic indic digits \u0660-\u0669)
+    const numbersMatch = plateStr.match(/[0-9\u0660-\u0669]+/);
+    const numbers = numbersMatch ? numbersMatch[0] : '';
+    let letters = plateStr.replace(numbers, '').replace(/[\s\-_]+/g, ' ').trim();
+    return { numbers: numbers || '-', letters: letters || '-' };
+}
+
 // Helper to convert array buffer to base64
 function arrayBufferToBase64(buffer) {
     let binary = '';
@@ -364,27 +377,39 @@ async function generateTripPdf(data) {
     drawSectionTitle(yPos, 'بيانات السائق');
     yPos += 9;
 
-    // Driver Details: render as manual grid rows (Value on Left, Label on Right)
-    const driverRows = [
-        [`${data.mobile}`, 'الجوال', `${data.nationalId}`, 'الهويه', `${data.driverName}`, 'السائق'],
-        [`${data.plateNumber}`, 'رقم اللوحه', `${data.carColor}`, 'اللون', `${data.carModel}`, 'السيارة']
-    ];
-    const colW = [43, 20, 43, 20, 44, 20];
-    const colX = [10, 53, 73, 116, 136, 180];
-    for (const row of driverRows) {
-        let rowH = 8;
-        // Draw border
-        doc.setDrawColor(220, 220, 220);
-        doc.rect(10, yPos, 190, rowH, 'S');
-        // Draw cells
-        for (let c = 0; c < 6; c++) {
-            doc.rect(colX[c], yPos, colW[c], rowH, 'S');
-            // Center the text inside the cell (x = colX + colW / 2)
-            const centerX = colX[c] + colW[c] / 2;
-            addArabicText(doc, row[c], centerX, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'center', transparent: true });
-        }
-        yPos += rowH;
+    // Driver Details: Render manual grid rows with custom widths
+    const rowH = 8;
+    doc.setDrawColor(220, 220, 220);
+
+    // --- ROW 1 (6 cells: Driver Info) ---
+    doc.rect(10, yPos, 190, rowH, 'S');
+    const row1Vals = [`${data.mobile}`, 'الجوال', `${data.nationalId}`, 'الهويه', `${data.driverName}`, 'السائق'];
+    const row1W = [43, 20, 43, 20, 44, 20];
+    const row1X = [10, 53, 73, 116, 136, 180];
+    for (let c = 0; c < 6; c++) {
+        doc.rect(row1X[c], yPos, row1W[c], rowH, 'S');
+        const centerX = row1X[c] + row1W[c] / 2;
+        addArabicText(doc, row1Vals[c], centerX, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'center', transparent: true });
     }
+    yPos += rowH;
+
+    // --- ROW 2 (8 cells: Car Info & Split Plate) ---
+    const plate = splitPlateNumber(data.plateNumber);
+    doc.rect(10, yPos, 190, rowH, 'S');
+    const row2Vals = [
+        plate.numbers, 'أرقام اللوحة',
+        plate.letters, 'حروف اللوحة',
+        `${data.carColor}`, 'اللون',
+        `${data.carModel}`, 'السيارة'
+    ];
+    const row2W = [30, 20, 25, 20, 25, 15, 35, 20];
+    const row2X = [10, 40, 60, 85, 105, 130, 145, 180];
+    for (let c = 0; c < 8; c++) {
+        doc.rect(row2X[c], yPos, row2W[c], rowH, 'S');
+        const centerX = row2X[c] + row2W[c] / 2;
+        addArabicText(doc, row2Vals[c], centerX, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'center', transparent: true });
+    }
+    yPos += rowH;
     yPos += 4;
 
     // Route Row (Separated Label and Value cells)
@@ -554,8 +579,10 @@ async function generateTripPdf(data) {
     doc.setFillColor(245, 245, 245);
     doc.rect(10, yPos, 190, 9, 'F');
     doc.rect(10, yPos, 190, 9, 'S');
-    addArabicText(doc, `السائق: ${data.driverName}`, 104, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
-    addArabicText(doc, `رقم اللوحه: ${data.plateNumber}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
+    const page3Plate = splitPlateNumber(data.plateNumber);
+    addArabicText(doc, `أرقام اللوحة: ${page3Plate.numbers}`, 10 + 190/6, yPos + 6.5, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'center', transparent: true });
+    addArabicText(doc, `حروف اللوحة: ${page3Plate.letters}`, 10 + 190/2, yPos + 6.5, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'center', transparent: true });
+    addArabicText(doc, `السائق: ${data.driverName}`, 10 + 5*190/6, yPos + 6.5, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'center', transparent: true });
     yPos += 12;
 
     // Helper to generate inspection table using canvas-based text

@@ -152,6 +152,54 @@ function addArabicText(doc, text, xMm, yMm, options = {}) {
 
 
 
+/**
+ * Render a long Arabic paragraph that wraps to fit within maxWidthMm.
+ * Returns the final Y position after all lines are drawn.
+ */
+function addArabicParagraph(doc, text, xMm, yMm, options = {}) {
+    if (!text || !text.toString().trim()) return yMm;
+
+    const fontSize = options.fontSize || 10;
+    const lineHeight = options.lineHeight || (fontSize * 0.45 + 2);
+    const maxWidthMm = options.maxWidthMm || 190;
+    const scale = 4;
+    const fontWeight = (options.fontStyle === 'bold') ? 'bold' : 'normal';
+    const fontStr = `${fontWeight} ${fontSize * 1.5 * scale}px ${arabicCanvasFont}`;
+
+    // Use canvas to measure word widths
+    const measurer = document.createElement('canvas');
+    const mctx = measurer.getContext('2d');
+    mctx.font = fontStr;
+
+    const pxToMm = 1 / (3.7795 * scale);
+    const maxWidthPx = maxWidthMm / pxToMm;
+
+    // Split text into words and build lines
+    const words = text.toString().split(' ');
+    const lines = [];
+    let currentLine = '';
+
+    for (const word of words) {
+        const testLine = currentLine ? currentLine + ' ' + word : word;
+        const testWidth = mctx.measureText(testLine).width;
+        if (testWidth > maxWidthPx && currentLine) {
+            lines.push(currentLine);
+            currentLine = word;
+        } else {
+            currentLine = testLine;
+        }
+    }
+    if (currentLine) lines.push(currentLine);
+
+    // Draw each line
+    let y = yMm;
+    for (const line of lines) {
+        addArabicText(doc, line, xMm, y, options);
+        y += lineHeight;
+    }
+    return y;
+}
+
 // Helper to convert array buffer to base64
 function arrayBufferToBase64(buffer) {
     let binary = '';
@@ -426,7 +474,7 @@ async function generateTripPdf(data) {
     drawFooter('امر تشغيل شامل كشف الركاب تم إصداره إلكترونيا من السيستم');
 
     // ==========================================
-    // PAGE 2: عقد نقل على الطرق البرية
+    // PAGE 2: عقد نقل الطرق البرية
     // ==========================================
     doc.addPage();
     drawHeader(2, data.qrUrl);
@@ -438,47 +486,44 @@ async function generateTripPdf(data) {
 
     // Date row
     doc.setFillColor(245, 245, 245);
-    doc.rect(130, yPos, 70, 9, 'F');
+    doc.rect(130, yPos, 70, 10, 'F');
     doc.setDrawColor(220, 220, 220);
-    doc.rect(130, yPos, 70, 9, 'S');
-    addArabicText(doc, `التاريخ: ${data.dateString}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
-    yPos += 16;
+    doc.rect(130, yPos, 70, 10, 'S');
+    addArabicText(doc, `التاريخ: ${data.dateString}`, 199, yPos + 7.5, { fontSize: 10, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
+    yPos += 18;
 
-    // Legal Text (long paragraph - split into multiple lines)
-    const legalText = 'تم ابرام هذا العقد بين المتعاقدين بناء على المادة (39) التاسعة والثلاثون من اللائحة المنظمة لنشاط النقل المتخصص وتأجير وتوجيه الحافلات';
-    addArabicText(doc, legalText, 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
-    yPos += 10;
-    const legalText2 = 'بناء على الفقرة (1) من المادة (39) والتي تنص على أن يجب على الناقل ابرام عقد نقل مع الأطراف المحددين في المادة (40) قبل تنفيذ عمليات النقل على الطرق البرية';
-    addArabicText(doc, legalText2, 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
-    yPos += 10;
-    const legalText3 = 'وبناء على ما سبق تم ابرام عقد النقل بين الأطراف الآتية:';
-    addArabicText(doc, legalText3, 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
-    yPos += 10;
-
-    // Parties
-    addArabicText(doc, `الطرف الأول / مؤسسة زوار طيبة للنقل البري ترخيص رقم - 3500005546`, 200, yPos, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
-    yPos += 7;
-    addArabicText(doc, `الطرف الثاني / ${data.guestName}`, 200, yPos, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    // Legal Text - properly wrapped to fill page width
+    yPos = addArabicParagraph(doc, 'تم ابرام هذا العقد بين المتعاقدين بناء على المادة (39) التاسعة والثلاثون من اللائحة المنظمة لنشاط النقل المتخصص وتأجير وتوجيه الحافلات', 200, yPos, { fontSize: 11, color: '#000000', align: 'right', maxWidthMm: 190, lineHeight: 8 });
+    yPos += 3;
+    yPos = addArabicParagraph(doc, 'بناء على الفقرة (1) من المادة (39) والتي تنص على أن يجب على الناقل ابرام عقد نقل مع الأطراف المحددين في المادة (40) قبل تنفيذ عمليات النقل على الطرق البرية', 200, yPos, { fontSize: 11, color: '#000000', align: 'right', maxWidthMm: 190, lineHeight: 8 });
+    yPos += 3;
+    addArabicText(doc, 'وبناء على ما سبق تم ابرام عقد النقل بين الأطراف الآتية:', 200, yPos, { fontSize: 11, color: '#000000', align: 'right' });
     yPos += 12;
 
+    // Parties
+    addArabicText(doc, `الطرف الأول / مؤسسة زوار طيبة للنقل البري ترخيص رقم - 3500005546`, 200, yPos, { fontSize: 11, color: '#000000', fontStyle: 'bold', align: 'right' });
+    yPos += 9;
+    addArabicText(doc, `الطرف الثاني / ${data.guestName}`, 200, yPos, { fontSize: 11, color: '#000000', fontStyle: 'bold', align: 'right' });
+    yPos += 14;
+
     // Description text
-    addArabicText(doc, 'اتفق الطرفان على ان ينفذ الطرف الأول عملية النقل للطرف الثاني مع مرافقيه وذويهم من الموقع المحدد مسبقاً وتوصيلهم الى الجهه المحدده بالعقد.', 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
-    yPos += 10;
+    yPos = addArabicParagraph(doc, 'اتفق الطرفان على ان ينفذ الطرف الأول عملية النقل للطرف الثاني مع مرافقيه وذويهم من الموقع المحدد مسبقاً وتوصيلهم الى الجهه المحدده بالعقد.', 200, yPos, { fontSize: 11, color: '#000000', align: 'right', maxWidthMm: 190, lineHeight: 8 });
+    yPos += 6;
 
     // Route Details
     doc.setDrawColor(220, 220, 220);
-    doc.rect(10, yPos, 190, 10, 'S');
-    doc.rect(10, yPos, 95, 10, 'S');
-    addArabicText(doc, `النقل من: ${data.source}`, 104, yPos + 7, { fontSize: 9, color: '#000000', align: 'right', transparent: true });
-    addArabicText(doc, `وصولاً الى: ${data.destination}`, 199, yPos + 7, { fontSize: 9, color: '#000000', align: 'right', transparent: true });
-    yPos += 18;
+    doc.rect(10, yPos, 190, 11, 'S');
+    doc.rect(10, yPos, 95, 11, 'S');
+    addArabicText(doc, `النقل من: ${data.source}`, 104, yPos + 8, { fontSize: 11, color: '#000000', align: 'right', transparent: true });
+    addArabicText(doc, `وصولاً الى: ${data.destination}`, 199, yPos + 8, { fontSize: 11, color: '#000000', align: 'right', transparent: true });
+    yPos += 20;
 
     // Terms
-    addArabicText(doc, 'في حال الغاء التعاقد لاي سبب شخصي او اسباب اخرى تتعلق في الحجوزات او الانظمة تكون سياسة الالغاء والاستبدال حسب نظام وزارة التجارة السعودي.', 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
-    yPos += 10;
-    addArabicText(doc, 'في حال الحجز وتم الالغاء قبل موعد الرحلة باكثر من 24 ساعة يتم استرداد المبلغ كامل.', 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
-    yPos += 10;
-    addArabicText(doc, 'في حالة طلب الحجز من خلال الموقع الالكتروني يعتبر الحجز وموافقته على الشروط الاحكام موافقة على هذا العقد.', 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
+    yPos = addArabicParagraph(doc, 'في حال الغاء التعاقد لاي سبب شخصي او اسباب اخرى تتعلق في الحجوزات او الانظمة تكون سياسة الالغاء والاستبدال حسب نظام وزارة التجارة السعودي.', 200, yPos, { fontSize: 11, color: '#000000', align: 'right', maxWidthMm: 190, lineHeight: 8 });
+    yPos += 4;
+    addArabicText(doc, 'في حال الحجز وتم الالغاء قبل موعد الرحلة باكثر من 24 ساعة يتم استرداد المبلغ كامل.', 200, yPos, { fontSize: 11, color: '#000000', align: 'right' });
+    yPos += 9;
+    yPos = addArabicParagraph(doc, 'في حالة طلب الحجز من خلال الموقع الالكتروني يعتبر الحجز وموافقته على الشروط الاحكام موافقة على هذا العقد.', 200, yPos, { fontSize: 11, color: '#000000', align: 'right', maxWidthMm: 190, lineHeight: 8 });
 
     drawFooter('امر تشغيل شامل كشف الركاب تم إصداره إلكترونيا من السيستم');
 

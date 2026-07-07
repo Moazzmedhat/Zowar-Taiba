@@ -183,6 +183,20 @@ document.addEventListener('DOMContentLoaded', () => {
     applyPlateLettersFormat('crud-plate-letters');
     applyPlateNumbersFormat('crud-plate-numbers');
 
+    // ==========================================
+    // NATIONAL ID VALIDATION (digits only, max 10)
+    // ==========================================
+    function applyNationalIdValidation(inputId) {
+        const el = document.getElementById(inputId);
+        if (!el) return;
+        el.setAttribute('maxlength', '10');
+        el.addEventListener('input', () => {
+            el.value = el.value.replace(/[^0-9\u0660-\u0669]/g, '').slice(0, 10);
+        });
+    }
+    applyNationalIdValidation('login-id');
+    applyNationalIdValidation('crud-id');
+
     // DOM Elements - CRUD Admin inputs
     const crudIndex = document.getElementById('crud-index');
     const crudId = document.getElementById('crud-id');

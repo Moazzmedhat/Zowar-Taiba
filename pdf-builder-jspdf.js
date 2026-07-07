@@ -277,6 +277,19 @@ async function generateTripPdf(data) {
         addArabicText(doc, title, 105, y + 5, { fontSize: 10, color: '#ffffff', fontStyle: 'bold', align: 'center' });
     }
 
+    // Helper: Draw Page Doc Title in a bordered box centered under logo
+    function drawDocTitle(title) {
+        // Box: centered horizontally, width 100mm, height 9mm
+        const boxW = 100, boxH = 9;
+        const boxX = (210 - boxW) / 2; // centered on A4 (210mm wide)
+        const boxY = 39;
+        doc.setDrawColor(0, 150, 136);
+        doc.setLineWidth(0.5);
+        doc.rect(boxX, boxY, boxW, boxH, 'S');
+        doc.setLineWidth(0.2);
+        addArabicText(doc, title, 105, boxY + 6.5, { fontSize: 12, color: '#009688', fontStyle: 'bold', align: 'center', transparent: true });
+    }
+
     // ==========================================
     // PAGE 1: كشف الركاب
     // ==========================================
@@ -284,8 +297,8 @@ async function generateTripPdf(data) {
     drawHeader(1, data.qrUrl);
     
     // Doc Title
-    addArabicText(doc, 'كشف الركاب', 105, yPos, { fontSize: 13, color: '#000000', fontStyle: 'bold', align: 'center' });
-    yPos += 7;
+    drawDocTitle('كشف الركاب');
+    yPos = 52;
 
     // General info row: render as separate addArabicText items
     // Use a plain gray box
@@ -293,9 +306,9 @@ async function generateTripPdf(data) {
     doc.rect(10, yPos, 190, 10, 'F');
     doc.setDrawColor(220, 220, 220);
     doc.rect(10, yPos, 190, 10, 'S');
-    addArabicText(doc, `اليوم: ${data.dayString}`, 70, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
-    addArabicText(doc, `التاريخ: ${data.dateString}`, 140, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
-    addArabicText(doc, `رقم الحجز: ${data.bookingId}`, 200, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    addArabicText(doc, `اليوم: ${data.dayString}`, 70, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
+    addArabicText(doc, `التاريخ: ${data.dateString}`, 140, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
+    addArabicText(doc, `رقم الحجز: ${data.bookingId}`, 200, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
     yPos += 14;
 
     // Driver Section Title
@@ -318,7 +331,7 @@ async function generateTripPdf(data) {
         for (let c = 0; c < 6; c++) {
             doc.rect(colX[c], yPos, colW[c], rowH, 'S');
             // Odd cols = label (Arabic), even cols = value
-            addArabicText(doc, row[c], colX[c] + colW[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right' });
+            addArabicText(doc, row[c], colX[c] + colW[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right', transparent: true });
         }
         yPos += rowH;
     }
@@ -332,7 +345,7 @@ async function generateTripPdf(data) {
     doc.rect(10, yPos, 190, 8, 'S');
     for (let c = 0; c < 4; c++) {
         doc.rect(routeX[c], yPos, routeCols[c], 8, 'S');
-        addArabicText(doc, routeVals[c], routeX[c] + routeCols[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right' });
+        addArabicText(doc, routeVals[c], routeX[c] + routeCols[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right', transparent: true });
     }
     yPos += 12;
 
@@ -344,7 +357,7 @@ async function generateTripPdf(data) {
     doc.rect(10, yPos, 190, 8, 'S');
     for (let c = 0; c < 6; c++) {
         doc.rect(guestX[c], yPos, guestCols[c], 8, 'S');
-        addArabicText(doc, guestVals[c], guestX[c] + guestCols[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right' });
+        addArabicText(doc, guestVals[c], guestX[c] + guestCols[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right', transparent: true });
     }
     yPos += 12;
 
@@ -389,7 +402,8 @@ async function generateTripPdf(data) {
                 addArabicText(doc, rowVals[c], cx + compCols[c] - (isCenterCol ? compCols[c]/2 : 1), yPos + 5, { 
                     fontSize: 7.5, 
                     color: '#000000', 
-                    align: isCenterCol ? 'center' : 'right' 
+                    align: isCenterCol ? 'center' : 'right',
+                    transparent: true
                 });
             }
             cx += compCols[c];
@@ -419,15 +433,15 @@ async function generateTripPdf(data) {
     yPos = 43;
 
     // Doc Title
-    addArabicText(doc, 'عقد نقل على الطرق البرية', 105, yPos, { fontSize: 13, color: '#000000', fontStyle: 'bold', align: 'center' });
-    yPos += 7;
+    drawDocTitle('عقد نقل على الطرق البرية');
+    yPos = 52;
 
     // Date row
     doc.setFillColor(245, 245, 245);
     doc.rect(130, yPos, 70, 9, 'F');
     doc.setDrawColor(220, 220, 220);
     doc.rect(130, yPos, 70, 9, 'S');
-    addArabicText(doc, `التاريخ: ${data.dateString}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    addArabicText(doc, `التاريخ: ${data.dateString}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
     yPos += 16;
 
     // Legal Text (long paragraph - split into multiple lines)
@@ -455,8 +469,8 @@ async function generateTripPdf(data) {
     doc.setDrawColor(220, 220, 220);
     doc.rect(10, yPos, 190, 10, 'S');
     doc.rect(10, yPos, 95, 10, 'S');
-    addArabicText(doc, `النقل من: ${data.source}`, 104, yPos + 7, { fontSize: 9, color: '#000000', align: 'right' });
-    addArabicText(doc, `وصولاً الى: ${data.destination}`, 199, yPos + 7, { fontSize: 9, color: '#000000', align: 'right' });
+    addArabicText(doc, `النقل من: ${data.source}`, 104, yPos + 7, { fontSize: 9, color: '#000000', align: 'right', transparent: true });
+    addArabicText(doc, `وصولاً الى: ${data.destination}`, 199, yPos + 7, { fontSize: 9, color: '#000000', align: 'right', transparent: true });
     yPos += 18;
 
     // Terms
@@ -476,23 +490,23 @@ async function generateTripPdf(data) {
     yPos = 43;
 
     // Doc Title
-    addArabicText(doc, 'سجل الفحص اليومي للسيارة', 105, yPos, { fontSize: 13, color: '#000000', fontStyle: 'bold', align: 'center' });
-    yPos += 7;
+    drawDocTitle('سجل الفحص اليومي للسيارة');
+    yPos = 52;
 
     // Metadata rows
     doc.setFillColor(245, 245, 245);
     doc.rect(10, yPos, 190, 9, 'F');
     doc.setDrawColor(220, 220, 220);
     doc.rect(10, yPos, 190, 9, 'S');
-    addArabicText(doc, `التاريخ: ${data.dateString}`, 104, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
-    addArabicText(doc, `رقم الحجز: ${data.bookingId}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    addArabicText(doc, `التاريخ: ${data.dateString}`, 104, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
+    addArabicText(doc, `رقم الحجز: ${data.bookingId}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
     yPos += 12;
 
     doc.setFillColor(245, 245, 245);
     doc.rect(10, yPos, 190, 9, 'F');
     doc.rect(10, yPos, 190, 9, 'S');
-    addArabicText(doc, `السائق: ${data.driverName}`, 104, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
-    addArabicText(doc, `رقم اللوحه: ${data.plateNumber}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    addArabicText(doc, `السائق: ${data.driverName}`, 104, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
+    addArabicText(doc, `رقم اللوحه: ${data.plateNumber}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
     yPos += 12;
 
     // Helper to generate inspection table using canvas-based text

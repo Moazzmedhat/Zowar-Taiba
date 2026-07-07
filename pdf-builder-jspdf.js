@@ -24,7 +24,7 @@ let arabicCanvasFont = 'Cairo, Arial, sans-serif';
 function renderArabicToCanvas(text, fontSize, color, fontWeight) {
     if (!text) return null;
     try {
-        const scale = 1.5; // Optimized scale to keep PDF size small and under Vercel payload limits
+        const scale = 4; // High-resolution retina scale for maximum sharpness
         const fontStr = `${fontWeight || 'normal'} ${fontSize * scale}px ${arabicCanvasFont}`;
         
         // Measure text width
@@ -33,7 +33,7 @@ function renderArabicToCanvas(text, fontSize, color, fontWeight) {
         if (!mctx) return null;
         mctx.font = fontStr;
         const metrics = mctx.measureText(text);
-        const textWidthPx = Math.ceil(metrics.width || 10) + 10; // slight padding
+        const textWidthPx = Math.ceil(metrics.width || 10) + 24; // padding
         const textHeightPx = Math.ceil(fontSize * scale * 1.5);
         
         // Render text
@@ -43,16 +43,20 @@ function renderArabicToCanvas(text, fontSize, color, fontWeight) {
         const ctx = canvas.getContext('2d');
         if (!ctx) return null;
         
+        // Fill canvas with white background (JPEG doesn't support transparency, so matching the white page)
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, textWidthPx, textHeightPx);
+        
         ctx.font = fontStr;
         ctx.fillStyle = color || '#000000';
         ctx.textBaseline = 'middle';
         ctx.direction = 'rtl';
         ctx.textAlign = 'right';
-        // Draw text from the right edge
-        ctx.fillText(text, textWidthPx - 3, textHeightPx / 2);
+        ctx.fillText(text, textWidthPx - 5, textHeightPx / 2);
         
         return {
-            dataUrl: canvas.toDataURL('image/png'),
+            // Use compressed JPEG instead of PNG to shrink file size by 90% while keeping high resolution
+            dataUrl: canvas.toDataURL('image/jpeg', 0.85),
             widthPx: textWidthPx,
             heightPx: textHeightPx
         };
@@ -97,8 +101,8 @@ function addArabicText(doc, text, xMm, yMm, options = {}) {
             return 10;
         }
         
-        // Convert pixels to mm (at 96 DPI: 1mm = 3.7795px; we used scale=1.5 so actual px / 1.5 / 3.7795)
-        const scale = 1.5;
+        // Convert pixels to mm (at 96 DPI: 1mm = 3.7795px; we used scale=4 so actual px / 4 / 3.7795)
+        const scale = 4;
         const pxToMm = 1 / (3.7795 * scale);
         const widthMm = rendered.widthPx * pxToMm;
         const heightMm = rendered.heightPx * pxToMm;
@@ -116,7 +120,7 @@ function addArabicText(doc, text, xMm, yMm, options = {}) {
         // Y is baseline in jsPDF; center the image vertically around it
         const drawY = yMm - heightMm * 0.7;
         
-        doc.addImage(rendered.dataUrl, 'PNG', drawX, drawY, widthMm, heightMm);
+        doc.addImage(rendered.dataUrl, 'JPEG', drawX, drawY, widthMm, heightMm);
         return widthMm;
     } catch (err) {
         console.error("addArabicText error:", err);

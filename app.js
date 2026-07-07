@@ -47,7 +47,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements - CRUD Admin inputs
     const crudIndex = document.getElementById('crud-index');
     const crudId = document.getElementById('crud-id');
-    const crudPlate = document.getElementById('crud-plate');
+    const crudPlateLetters = document.getElementById('crud-plate-letters');
+    const crudPlateNumbers = document.getElementById('crud-plate-numbers');
     const crudName = document.getElementById('crud-name');
     const crudMobile = document.getElementById('crud-mobile');
     const crudModel = document.getElementById('crud-model');
@@ -125,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const index = crudIndex.value;
         const driverData = {
             nationalId: crudId.value.trim(),
-            plateNumber: crudPlate.value.trim(),
+            plateNumber: (crudPlateLetters.value.trim() + ' ' + crudPlateNumbers.value.trim()).trim(),
             driverName: crudName.value.trim(),
             mobile: crudMobile.value.trim(),
             carModel: crudModel.value.trim(),
@@ -149,7 +150,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const d = drivers[idx];
         crudIndex.value = idx;
         crudId.value = d.nationalId;
-        crudPlate.value = d.plateNumber;
+        // Split existing plateNumber back into letters and numbers for editing
+        const plateMatch = d.plateNumber ? d.plateNumber.match(/^([^0-9٠-٩]*)(\s*[0-9٠-٩]+\s*)([^0-9٠-٩]*)$/) : null;
+        const plateNums = d.plateNumber ? (d.plateNumber.match(/[0-9\u0660-\u0669]+/) || [''])[0] : '';
+        const plateLets = d.plateNumber ? d.plateNumber.replace(plateNums, '').replace(/^\s+|\s+$/g, '') : '';
+        crudPlateLetters.value = plateLets;
+        crudPlateNumbers.value = plateNums;
         crudName.value = d.driverName;
         crudMobile.value = d.mobile;
         crudModel.value = d.carModel;

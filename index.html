@@ -132,8 +132,11 @@
                                 <input type="text" id="crud-id" required>
                             </div>
                             <div class="form-group">
-                                <label for="crud-plate">رقم اللوحة</label>
-                                <input type="text" id="crud-plate" required>
+                                <label>رقم اللوحة</label>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" id="crud-plate-letters" placeholder="حروف (مثال: أ ب ج)" required style="flex:1;">
+                                    <input type="text" id="crud-plate-numbers" placeholder="أرقام (مثال: 1234)" required style="flex:1;">
+                                </div>
                             </div>
                         </div>
                         <div class="grid-2">

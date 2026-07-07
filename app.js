@@ -361,6 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const gName = guestNameInput.value.trim() || "غير محدد";
         const gPhone = guestPhoneInput.value.trim() || "غير محدد";
 
+        alert("Checkpoint A: Form submit event fired");
         // Show upload indicator
         const statusNotice = document.createElement('div');
         statusNotice.style.position = 'fixed';
@@ -397,11 +398,15 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         try {
+            alert("Checkpoint B: About to build draft document definition");
             // Step 1: Generate a draft PDF (without QR) to upload to Vercel Blob
             const draftDoc = buildPdfDocument(pdfData);
+            alert("Checkpoint C: Document definition built successfully, compiling to PDF");
             const draftPdf = pdfMake.createPdf(draftDoc);
+            alert("Checkpoint D: PDF compile initiated, getting Blob");
 
             draftPdf.getBlob((pdfBlob) => {
+                alert("Checkpoint E: getBlob callback entered successfully!");
                 // Upload to Vercel Blob Storage via our API endpoint
                 fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
                     method: 'POST',

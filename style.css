@@ -358,7 +358,7 @@ table.admin-table tbody tr:hover td {
 
 .pdf-header-right {
     text-align: right;
-    width: 35%;
+    width: 63mm;
 }
 
 .pdf-header-right h2 {
@@ -376,8 +376,7 @@ table.admin-table tbody tr:hover td {
 }
 
 .pdf-header-center {
-    text-align: center;
-    width: 30%;
+    width: 54mm;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -395,7 +394,7 @@ table.admin-table tbody tr:hover td {
 }
 
 .pdf-header-left {
-    width: 35%;
+    width: 63mm;
     display: flex;
     justify-content: flex-end;
 }
@@ -429,15 +428,15 @@ table.admin-table tbody tr:hover td {
 }
 
 .col-3 {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 58mm);
 }
 
 .col-2 {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, 87mm);
 }
 
 .col-4 {
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(4, 43.5mm);
 }
 
 .pdf-field {

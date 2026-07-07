@@ -396,56 +396,64 @@ document.addEventListener('DOMContentLoaded', () => {
             qrUrl: null // Will be set after upload
         };
 
-        // Step 1: Generate a draft PDF (without QR) to upload to Vercel Blob
-        const draftDoc = buildPdfDocument(pdfData);
-        const draftPdf = pdfMake.createPdf(draftDoc);
+        try {
+            // Step 1: Generate a draft PDF (without QR) to upload to Vercel Blob
+            const draftDoc = buildPdfDocument(pdfData);
+            const draftPdf = pdfMake.createPdf(draftDoc);
 
-        draftPdf.getBlob((pdfBlob) => {
-            // Upload to Vercel Blob Storage via our API endpoint
-            fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
-                method: 'POST',
-                body: pdfBlob
-            })
-            .then(response => {
-                if (!response.ok) throw new Error("Vercel Blob upload response failed");
-                return response.json();
-            })
-            .then(data => {
-                // Vercel Blob returns the direct permanent URL in the 'url' property
-                const publicUrl = data.url;
-                
-                // Step 2: Re-generate the PDF with QR code pointing to the uploaded PDF
-                pdfData.qrUrl = publicUrl;
-                const finalDoc = buildPdfDocument(pdfData);
-                const finalPdf = pdfMake.createPdf(finalDoc);
+            draftPdf.getBlob((pdfBlob) => {
+                // Upload to Vercel Blob Storage via our API endpoint
+                fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
+                    method: 'POST',
+                    body: pdfBlob
+                })
+                .then(response => {
+                    if (!response.ok) throw new Error("Vercel Blob upload response failed");
+                    return response.json();
+                })
+                .then(data => {
+                    // Vercel Blob returns the direct permanent URL in the 'url' property
+                    const publicUrl = data.url;
+                    
+                    // Step 2: Re-generate the PDF with QR code pointing to the uploaded PDF
+                    pdfData.qrUrl = publicUrl;
+                    const finalDoc = buildPdfDocument(pdfData);
+                    const finalPdf = pdfMake.createPdf(finalDoc);
 
-                // Download the final PDF with QR code
-                finalPdf.download(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`, () => {
-                    statusNotice.remove();
-                    alert("تم إصدار كشف الركاب بنجاح! عند مسح رمز الـ QR سيفتح الملف مباشرة.");
-                });
+                    // Download the final PDF with QR code
+                    finalPdf.download(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`, () => {
+                        statusNotice.remove();
+                        alert("تم إصدار كشف الركاب بنجاح! عند مسح رمز الـ QR سيفتح الملف مباشرة.");
+                    });
 
-                // Also re-upload the final version with QR code (overwrite)
-                finalPdf.getBlob((finalBlob) => {
-                    fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
-                        method: 'POST',
-                        body: finalBlob
-                    }).catch(err => console.error('Re-upload error:', err));
+                    // Also re-upload the final version with QR code (overwrite)
+                    finalPdf.getBlob((finalBlob) => {
+                        fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
+                            method: 'POST',
+                            body: finalBlob
+                        }).catch(err => console.error('Re-upload error:', err));
+                    });
+                })
+                .catch(uploadErr => {
+                    console.error("Cloud Upload Error:", uploadErr);
+                    alert("يتعذر الاتصال بالسحابة حالياً. تم حفظ كشف الركاب محلياً برمز QR احتياطي.");
+                    
+                    // Fallback: generate PDF with text-only QR code
+                    const fallbackQrData = `مؤسسة زوار طيبة للنقل البري - كشف ركاب رقم ${bookingId} - السائق: ${currentDriver.driverName}`;
+                    pdfData.qrUrl = fallbackQrData;
+                    const fallbackDoc = buildPdfDocument(pdfData);
+                    pdfMake.createPdf(fallbackDoc).download(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`, () => {
+                        statusNotice.remove();
+                    });
                 });
-            })
-            .catch(uploadErr => {
-                console.error("Cloud Upload Error:", uploadErr);
-                alert("يتعذر الاتصال بالسحابة حالياً. تم حفظ كشف الركاب محلياً برمز QR احتياطي.");
-                
-                // Fallback: generate PDF with text-only QR code
-                const fallbackQrData = `مؤسسة زوار طيبة للنقل البري - كشف ركاب رقم ${bookingId} - السائق: ${currentDriver.driverName}`;
-                pdfData.qrUrl = fallbackQrData;
-                const fallbackDoc = buildPdfDocument(pdfData);
-                pdfMake.createPdf(fallbackDoc).download(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`, () => {
-                    statusNotice.remove();
-                });
+            }, (blobErr) => {
+                throw blobErr;
             });
-        });
+        } catch (pdfErr) {
+            statusNotice.remove();
+            console.error("Fatal PDF Generation Error:", pdfErr);
+            alert("خطأ أثناء إنشاء كشف الركاب: " + pdfErr.message + "\nيرجى الانتظار 3 ثوانٍ حتى يكتمل تحميل الخطوط العربية ثم حاول مجدداً.");
+        }
     });
 
 });

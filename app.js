@@ -406,12 +406,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (!response.ok) {
-                let errText = response.statusText;
+                let errText = "";
                 try {
-                    const errJson = await response.json();
-                    errText = errJson.error || JSON.stringify(errJson);
+                    errText = await response.text();
                 } catch(e) {}
-                throw new Error("Vercel Blob upload failed: " + errText);
+                throw new Error(`Vercel Blob upload failed with status ${response.status} (${response.statusText}). Response: ${errText.slice(0, 150)}`);
             }
             const data = await response.json();
             const publicUrl = data.url;

@@ -5,55 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>بوابة السائقين | مؤسسة زوار طيبة للنقل البري</title>
     <link rel="stylesheet" href="style.css">
-    <!-- pdfmake-rtl for client-side PDF generation (Arabic RTL + viewport-independent) -->
-    <script src="https://unpkg.com/pdfmake-rtl/build/pdfmake.min.js"></script>
-    <script src="https://unpkg.com/pdfmake-rtl/build/vfs_fonts.js"></script>
-    <script>
-        // Global error tracking for easy mobile debugging
-        window.onerror = function(message, source, lineno, colno, error) {
-            alert("JS Error:\n" + message + "\nLine: " + lineno + "\nSource: " + source);
-            return false;
-        };
-        window.addEventListener('unhandledrejection', function(event) {
-            alert("Unhandled Promise Rejection:\n" + event.reason);
-        });
-
-        // Load and register Cairo Arabic font for pdfmake-rtl locally
-        (async function() {
-            try {
-                const [regular, bold] = await Promise.all([
-                    fetch('fonts/Cairo/Cairo-Regular.ttf').then(r => {
-                        if (!r.ok) throw new Error("Cairo-Regular fetch status " + r.status);
-                        return r.arrayBuffer();
-                    }),
-                    fetch('fonts/Cairo/Cairo-Bold.ttf').then(r => {
-                        if (!r.ok) throw new Error("Cairo-Bold fetch status " + r.status);
-                        return r.arrayBuffer();
-                    })
-                ]);
-                function bufToBase64(buf) {
-                    let binary = '';
-                    const bytes = new Uint8Array(buf);
-                    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-                    return btoa(binary);
-                }
-                pdfMake.vfs = pdfMake.vfs || {};
-                pdfMake.vfs['Cairo-Regular.ttf'] = bufToBase64(regular);
-                pdfMake.vfs['Cairo-Bold.ttf'] = bufToBase64(bold);
-                pdfMake.fonts = pdfMake.fonts || {};
-                pdfMake.fonts['Cairo'] = {
-                    normal: 'Cairo-Regular.ttf',
-                    bold: 'Cairo-Bold.ttf',
-                    italics: 'Cairo-Regular.ttf',
-                    bolditalics: 'Cairo-Bold.ttf'
-                };
-                console.log('Cairo font loaded locally');
-            } catch(e) {
-                alert("Font Load Error: " + e.message);
-                console.error('Failed to load Cairo font:', e);
-            }
-        })();
-    </script>
+    <!-- html2pdf.js for client-side PDF generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 </head>
 <body>
 
@@ -604,7 +557,6 @@
         </div>
     </div>
 
-    <script src="pdf-builder.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

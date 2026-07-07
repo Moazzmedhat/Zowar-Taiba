@@ -424,12 +424,12 @@ async function generateTripPdf(data) {
     let cx = 10;
     for (let c = 0; c < compCols.length; c++) {
         doc.rect(cx, yPos, compCols[c], hdrH, 'F');
-        const isCenterCol = (c === 3 || c === 7);
-        addArabicText(doc, compHdrs[c], cx + compCols[c] - (isCenterCol ? compCols[c]/2 : 1), yPos + 5, { 
+        const centerX = cx + compCols[c] / 2;
+        addArabicText(doc, compHdrs[c], centerX, yPos + 5, { 
             fontSize: 8, 
             color: '#ffffff', 
             fontStyle: 'bold', 
-            align: isCenterCol ? 'center' : 'right' 
+            align: 'center' 
         });
         cx += compCols[c];
     }
@@ -449,11 +449,11 @@ async function generateTripPdf(data) {
         for (let c = 0; c < compCols.length; c++) {
             doc.rect(cx, yPos, compCols[c], rH, 'S');
             if (rowVals[c]) {
-                const isCenterCol = (c === 3 || c === 7);
-                addArabicText(doc, rowVals[c], cx + compCols[c] - (isCenterCol ? compCols[c]/2 : 1), yPos + 5, { 
+                const centerX = cx + compCols[c] / 2;
+                addArabicText(doc, rowVals[c], centerX, yPos + 5, { 
                     fontSize: 7.5, 
                     color: '#000000', 
-                    align: isCenterCol ? 'center' : 'right',
+                    align: 'center',
                     transparent: true
                 });
             }

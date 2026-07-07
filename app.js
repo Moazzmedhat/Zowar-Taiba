@@ -150,6 +150,39 @@ document.addEventListener('DOMContentLoaded', () => {
     initCityDropdown('trip-source-search', 'trip-source', 'source-list');
     initCityDropdown('trip-dest-search',   'trip-destination', 'dest-list');
 
+    // ==========================================
+    // PLATE LETTERS AUTO-FORMATTER (spaces after each letter, max 3)
+    // ==========================================
+    function applyPlateLettersFormat(inputId) {
+        const el = document.getElementById(inputId);
+        if (!el) return;
+        el.setAttribute('maxlength', '5'); // "أ ب ج" = 5 chars
+        el.addEventListener('input', () => {
+            const cursor = el.selectionStart;
+            // Strip spaces, keep only Arabic or English letters, limit 3
+            const raw = el.value
+                .replace(/\s/g, '')
+                .replace(/[^a-zA-Z\u0600-\u06FF]/g, '')
+                .slice(0, 3);
+            // Re-join with spaces between every letter
+            el.value = raw.split('').join(' ');
+        });
+    }
+
+    function applyPlateNumbersFormat(inputId) {
+        const el = document.getElementById(inputId);
+        if (!el) return;
+        el.setAttribute('maxlength', '4');
+        el.addEventListener('input', () => {
+            el.value = el.value.replace(/[^0-9\u0660-\u0669]/g, '').slice(0, 4);
+        });
+    }
+
+    applyPlateLettersFormat('login-plate-letters');
+    applyPlateNumbersFormat('login-plate-numbers');
+    applyPlateLettersFormat('crud-plate-letters');
+    applyPlateNumbersFormat('crud-plate-numbers');
+
     // DOM Elements - CRUD Admin inputs
     const crudIndex = document.getElementById('crud-index');
     const crudId = document.getElementById('crud-id');

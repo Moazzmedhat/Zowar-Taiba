@@ -452,21 +452,18 @@ document.addEventListener('DOMContentLoaded', () => {
         html2pdf().set(opt).from(pdfTemplate).toPdf().get('pdf').then(function(pdfObj) {
             const pdfBlob = pdfObj.output('blob');
             
-            // Upload anonymously to tmpfiles.org
-            const formData = new FormData();
-            formData.append('file', pdfBlob, `booking-${bookingId}.pdf`);
-
-            fetch('https://tmpfiles.org/api/v1/upload', {
+            // Upload to Vercel Blob Storage via our API endpoint
+            fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
                 method: 'POST',
-                body: formData
+                body: pdfBlob
             })
             .then(response => {
-                if (!response.ok) throw new Error("Network upload response failed");
+                if (!response.ok) throw new Error("Vercel Blob upload response failed");
                 return response.json();
             })
             .then(data => {
-                // Change url to direct view/download link
-                const publicUrl = data.data.url.replace('https://tmpfiles.org/', 'https://tmpfiles.org/dl/');
+                // Vercel Blob returns the direct permanent URL in the 'url' property
+                const publicUrl = data.url;
                 
                 // Now render the QR codes using this public URL
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(publicUrl)}`;

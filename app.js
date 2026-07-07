@@ -377,28 +377,28 @@ document.addEventListener('DOMContentLoaded', () => {
         statusNotice.textContent = "جاري إصدار كشف الركاب... يرجى الانتظار";
         document.body.appendChild(statusNotice);
 
-        // Build data object for pdfmake
-        const pdfData = {
-            bookingId,
-            flightNo,
-            dateString,
-            dayString,
-            driverName: currentDriver.driverName,
-            nationalId: currentDriver.nationalId,
-            mobile: currentDriver.mobile,
-            carModel: currentDriver.carModel,
-            carColor: currentDriver.carColor,
-            plateNumber: currentDriver.plateNumber,
-            source: tripSource.value,
-            destination: tripDestination.value,
-            guestName: gName,
-            guestPhone: gPhone,
-            companions: companions,
-            qrUrl: null // Will be set after upload
-        };
-
         try {
             alert("Checkpoint B: About to build draft document definition");
+            // Build data object for pdfmake inside the try block
+            const pdfData = {
+                bookingId,
+                flightNo,
+                dateString,
+                dayString,
+                driverName: currentDriver ? currentDriver.driverName : 'غير معروف',
+                nationalId: currentDriver ? currentDriver.nationalId : 'غير معروف',
+                mobile: currentDriver ? currentDriver.mobile : 'غير معروف',
+                carModel: currentDriver ? currentDriver.carModel : 'غير معروف',
+                carColor: currentDriver ? currentDriver.carColor : 'غير معروف',
+                plateNumber: currentDriver ? currentDriver.plateNumber : 'غير معروف',
+                source: tripSource.value,
+                destination: tripDestination.value,
+                guestName: gName,
+                guestPhone: gPhone,
+                companions: companions,
+                qrUrl: null // Will be set after upload
+            };
+            
             // Step 1: Generate a draft PDF (without QR) to upload to Vercel Blob
             const draftDoc = buildPdfDocument(pdfData);
             alert("Checkpoint C: Document definition built successfully, compiling to PDF");

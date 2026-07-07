@@ -405,7 +405,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: pdfBlob
             });
 
-            if (!response.ok) throw new Error("Vercel Blob upload failed");
+            if (!response.ok) {
+                let errText = response.statusText;
+                try {
+                    const errJson = await response.json();
+                    errText = errJson.error || JSON.stringify(errJson);
+                } catch(e) {}
+                throw new Error("Vercel Blob upload failed: " + errText);
+            }
             const data = await response.json();
             const publicUrl = data.url;
 
@@ -442,7 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
             fallbackDoc.save(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`);
 
             statusNotice.remove();
-            alert("يتعذر الاتصال بالسحابة حالياً. تم حفظ كشف الركاب محلياً برمز QR احتياطي.");
+            alert(`يتعذر الاتصال بالسحابة حالياً. تم حفظ كشف الركاب محلياً برمز QR احتياطي.\n\nسبب الخطأ:\n${err.message}`);
         }
     });
 

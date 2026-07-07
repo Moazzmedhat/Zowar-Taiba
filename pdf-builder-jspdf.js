@@ -1,163 +1,108 @@
-// Arabic Glyph Table mapping standard Arabic characters to their contextual forms [Medial, Initial, Final, Isolated]
-const ARABIC_GLYPHS = {
-    0x0621: [0xFE80, 0xFE80, 0xFE80, 0xFE80], // Hamza
-    0x0622: [0xFE82, 0xFE82, 0xFE82, 0xFE81], // Alef Mad
-    0x0623: [0xFE84, 0xFE84, 0xFE84, 0xFE83], // Alef Hamza Above
-    0x0624: [0xFE86, 0xFE86, 0xFE86, 0xFE85], // Waw Hamza
-    0x0625: [0xFE88, 0xFE88, 0xFE88, 0xFE87], // Alef Hamza Below
-    0x0626: [0xFE8C, 0xFE8B, 0xFE8A, 0xFE89], // Yeh Hamza
-    0x0627: [0xFE8E, 0xFE8E, 0xFE8E, 0xFE8D], // Alef
-    0x0628: [0xFE92, 0xFE91, 0xFE90, 0xFE8F], // Beh
-    0x0629: [0xFE94, 0xFE94, 0xFE94, 0xFE93], // Teh Marbuta
-    0x062A: [0xFE98, 0xFE97, 0xFE96, 0xFE95], // Teh
-    0x062B: [0xFE9C, 0xFE9B, 0xFE9A, 0xFE99], // Theh
-    0x062C: [0xFEA0, 0xFE9F, 0xFE9E, 0xFE9D], // Jeem
-    0x062D: [0xFEA4, 0xFEA3, 0xFEA2, 0xFEA1], // Hah
-    0x062E: [0xFEA8, 0xFEA7, 0xFEA6, 0xFEA5], // Khah
-    0x062F: [0xFEAA, 0xFEAA, 0xFEAA, 0xFEA9], // Dal
-    0x0630: [0xFEAC, 0xFEAC, 0xFEAC, 0xFEAB], // Thal
-    0x0631: [0xFEAE, 0xFEAE, 0xFEAE, 0xFEAD], // Reh
-    0x0632: [0xFEB0, 0xFEB0, 0xFEB0, 0xFEAF], // Zain
-    0x0633: [0xFEB4, 0xFEB3, 0xFEB2, 0xFEB1], // Seen
-    0x0634: [0xFEB8, 0xFEB7, 0xFEB6, 0xFEB5], // Sheen
-    0x0635: [0xFEBC, 0xFEBB, 0xFEBA, 0xFEB9], // Sad
-    0x0636: [0xFEC0, 0xFEBF, 0xFEBE, 0xFEBD], // Dad
-    0x0637: [0xFEC4, 0xFEC3, 0xFEC2, 0xFEC1], // Tah
-    0x0638: [0xFEC8, 0xFEC7, 0xFEC6, 0xFEC5], // Zah
-    0x0639: [0xFECC, 0xFECB, 0xFECA, 0xFEC9], // Ain
-    0x063A: [0xFED0, 0xFECF, 0xFECE, 0xFECD], // Ghain
-    0x0641: [0xFED4, 0xFED3, 0xFED2, 0xFED1], // Feh
-    0x0642: [0xFED8, 0xFED7, 0xFED6, 0xFED5], // Qah
-    0x0643: [0xFEDC, 0xFEDB, 0xFEDA, 0xFED9], // Kaf
-    0x0644: [0xFEE0, 0xFEDF, 0xFEDE, 0xFEDD], // Lam
-    0x0645: [0xFEE4, 0xFEE3, 0xFEE2, 0xFEE1], // Meem
-    0x0646: [0xFEE8, 0xFEE7, 0xFEE6, 0xFEE5], // Noon
-    0x0647: [0xFEEC, 0xFEEB, 0xFEEA, 0xFEE9], // Heh
-    0x0648: [0xFEEE, 0xFEEE, 0xFEEE, 0xFEED], // Waw
-    0x0649: [0xFEF0, 0xFEF0, 0xFEF0, 0xFEEF], // Alef Maksura
-    0x064A: [0xFEF4, 0xFEF3, 0xFEF2, 0xFEF1], // Yeh
+/**
+ * Arabic Text Renderer using Browser Canvas API
+ * 
+ * Instead of manually reshaping Arabic glyphs (which fails because jsPDF's embedded
+ * font doesn't have Arabic Presentation Forms in its cmap), we use the browser's
+ * native text rendering engine which handles Arabic shaping and RTL perfectly.
+ * 
+ * Each Arabic text string is rendered to a Canvas, then embedded as an image in the PDF.
+ */
+
+// Cache for the Arabic canvas font (set after Cairo font loads via @font-face)
+let arabicCanvasFont = 'Cairo, Arial, sans-serif';
+
+/**
+ * Render Arabic text to a canvas and return as base64 PNG data URL.
+ * The browser handles all Arabic shaping (connecting letters) and RTL direction natively.
+ * 
+ * @param {string} text - The Arabic text to render
+ * @param {number} fontSize - Font size in pixels
+ * @param {string} color - CSS color string (e.g. '#000000')
+ * @param {string} fontWeight - 'normal' or 'bold'
+ * @returns {{ dataUrl: string, widthPx: number, heightPx: number }}
+ */
+function renderArabicToCanvas(text, fontSize, color, fontWeight) {
+    if (!text) return null;
     
-    // Lam-Alef Ligatures
-    0xFEFB: [0xFEFC, 0xFEFC, 0xFEFC, 0xFEFB], // Lam-Alef
-    0xFEF7: [0xFEF8, 0xFEF8, 0xFEF8, 0xFEF7], // Lam-Alef Hamza Above
-    0xFEF9: [0xFEFA, 0xFEFA, 0xFEFA, 0xFEF9], // Lam-Alef Hamza Below
-    0xFEF5: [0xFEF6, 0xFEF6, 0xFEF6, 0xFEF5]  // Lam-Alef Mad
-};
-
-function canConnectRight(ch) {
-    if (!ch) return false;
-    const code = ch.charCodeAt(0);
-    if (code === 0x0621) return false; // Hamza
-    return !!ARABIC_GLYPHS[code];
-}
-
-function canConnectLeft(ch) {
-    if (!ch) return false;
-    const code = ch.charCodeAt(0);
-    const nonLeft = [
-        0x0621, // Hamza
-        0x0622, 0x0623, 0x0625, 0x0627, // Alef variations
-        0x062F, // Dal
-        0x0630, // Thal
-        0x0631, // Reh
-        0x0632, // Zain
-        0x0648, // Waw
-        0x0649, // Alef Maksura
-        0x0629,  // Teh Marbuta
-        0xFEFB, 0xFEF7, 0xFEF9, 0xFEF5 // Lam-Alef Ligatures
-    ];
-    if (nonLeft.includes(code)) return false;
-    return !!ARABIC_GLYPHS[code];
-}
-
-function reshapeArabicText(text) {
-    if (!text) return '';
-    let result = '';
-    const len = text.length;
-    for (let i = 0; i < len; i++) {
-        const code = text.charCodeAt(i);
-        const forms = ARABIC_GLYPHS[code];
-        if (forms) {
-            const prev = i > 0 ? text[i - 1] : null;
-            const next = i < len - 1 ? text[i + 1] : null;
-            
-            const connectPrev = prev && canConnectLeft(prev) && canConnectRight(text[i]);
-            const connectNext = next && canConnectRight(next) && canConnectLeft(text[i]);
-            
-            let formIndex = 3; // Isolated
-            if (connectPrev && connectNext) {
-                formIndex = 0; // Medial
-            } else if (connectNext) {
-                formIndex = 1; // Initial
-            } else if (connectPrev) {
-                formIndex = 2; // Final
-            }
-            result += String.fromCharCode(forms[formIndex]);
-        } else {
-            result += text[i];
-        }
-    }
-    return result;
-}
-
-function fixArabicText(text) {
-    if (text === undefined || text === null) return '';
-    const str = text.toString();
+    const scale = 3; // Retina scale for crisp text
+    const fontStr = `${fontWeight || 'normal'} ${fontSize * scale}px ${arabicCanvasFont}`;
     
-    // Preprocess Lam-Alef
-    let prepared = str
-        .replace(/لآ/g, '\uFEF5')
-        .replace(/لأ/g, '\uFEF7')
-        .replace(/لإ/g, '\uFEF9')
-        .replace(/لا/g, '\uFEFB');
-
-    // Reshape characters to their connected forms
-    const reshaped = reshapeArabicText(prepared);
-
-    // Identify runs of Arabic vs. Non-Arabic
-    const isArabicChar = (ch) => {
-        const code = ch.charCodeAt(0);
-        return (code >= 0x0600 && code <= 0x06FF) || 
-               (code >= 0xFE70 && code <= 0xFEFF) || 
-               (code >= 0xFB50 && code <= 0xFDFF);
+    // Measure text width
+    const measurer = document.createElement('canvas');
+    const mctx = measurer.getContext('2d');
+    mctx.font = fontStr;
+    const metrics = mctx.measureText(text);
+    const textWidthPx = Math.ceil(metrics.width) + 20; // slight padding
+    const textHeightPx = Math.ceil(fontSize * scale * 1.5);
+    
+    // Render text
+    const canvas = document.createElement('canvas');
+    canvas.width = textWidthPx;
+    canvas.height = textHeightPx;
+    const ctx = canvas.getContext('2d');
+    
+    ctx.font = fontStr;
+    ctx.fillStyle = color || '#000000';
+    ctx.textBaseline = 'middle';
+    ctx.direction = 'rtl';
+    ctx.textAlign = 'right';
+    // Draw text from the right edge
+    ctx.fillText(text, textWidthPx - 5, textHeightPx / 2);
+    
+    return {
+        dataUrl: canvas.toDataURL('image/png'),
+        widthPx: textWidthPx,
+        heightPx: textHeightPx
     };
-
-    let runs = [];
-    let currentRun = '';
-    let currentIsArabic = null;
-
-    for (let i = 0; i < reshaped.length; i++) {
-        const ch = reshaped[i];
-        const isAr = isArabicChar(ch);
-        
-        if (currentIsArabic === null) {
-            currentIsArabic = isAr;
-            currentRun = ch;
-        } else if (currentIsArabic === isAr) {
-            currentRun += ch;
-        } else {
-            runs.push({ text: currentRun, isArabic: currentIsArabic });
-            currentIsArabic = isAr;
-            currentRun = ch;
-        }
-    }
-    if (currentRun) {
-        runs.push({ text: currentRun, isArabic: currentIsArabic });
-    }
-
-    // Process each run:
-    // - Arabic runs: reverse the characters
-    // - Non-Arabic runs (like numbers/English): keep original character order
-    const processedRuns = runs.map(run => {
-        if (run.isArabic) {
-            return run.text.split('').reverse().join('');
-        }
-        return run.text;
-    });
-
-    // Reverse the order of all runs so the entire line reads RTL
-    return processedRuns.reverse().join('');
 }
+
+/**
+ * Add Arabic text to a jsPDF document as a canvas-rendered image.
+ * This completely bypasses jsPDF's font system for Arabic text.
+ * 
+ * @param {object} doc - jsPDF document instance
+ * @param {string} text - Arabic text string
+ * @param {number} xMm - X position in mm (right edge for RTL, or use align)
+ * @param {number} yMm - Y position in mm (baseline)
+ * @param {object} options - { fontSize, color, fontStyle, align, maxWidthMm }
+ * @returns {number} - width of rendered image in mm
+ */
+function addArabicText(doc, text, xMm, yMm, options = {}) {
+    if (!text || !text.toString().trim()) return 0;
+    
+    const str = text.toString();
+    const fontSize = options.fontSize || doc.getFontSize();
+    const color = options.color || '#000000';
+    const fontWeight = (options.fontStyle === 'bold') ? 'bold' : 'normal';
+    const align = options.align || 'right';
+    
+    const rendered = renderArabicToCanvas(str, fontSize * 1.5, color, fontWeight);
+    if (!rendered) return 0;
+    
+    // Convert pixels to mm (at 96 DPI: 1mm = 3.7795px; we used scale=3 so actual px / 3 / 3.7795)
+    const scale = 3;
+    const pxToMm = 1 / (3.7795 * scale);
+    const widthMm = rendered.widthPx * pxToMm;
+    const heightMm = rendered.heightPx * pxToMm;
+    
+    // Adjust x position based on alignment
+    let drawX = xMm;
+    if (align === 'right') {
+        drawX = xMm - widthMm;
+    } else if (align === 'center') {
+        drawX = xMm - widthMm / 2;
+    } else {
+        drawX = xMm; // left
+    }
+    
+    // Y is baseline in jsPDF; center the image vertically around it
+    const drawY = yMm - heightMm * 0.7;
+    
+    doc.addImage(rendered.dataUrl, 'PNG', drawX, drawY, widthMm, heightMm);
+    return widthMm;
+}
+
+
 
 // Helper to convert array buffer to base64
 function arrayBufferToBase64(buffer) {
@@ -227,50 +172,26 @@ async function generateTripPdf(data) {
         format: 'a4'
     });
 
-    // Override the text method for this specific instance to support RTL and shaping
-    const originalText = doc.text;
-    doc.text = function(text, x, y, options) {
-        if (typeof text === 'string') {
-            text = fixArabicText(text);
-        } else if (Array.isArray(text)) {
-            text = text.map(t => typeof t === 'string' ? fixArabicText(t) : t);
-        }
-        return originalText.call(doc, text, x, y, options);
-    };
+    // We use addArabicText() for all Arabic strings — it renders via Canvas so the
+    // browser handles shaping and RTL natively. jsPDF's text() is only used for
+    // English/numbers where no shaping is needed.
 
-    // Register local Cairo fonts
-    if (fontRegularBase64) {
-        doc.addFileToVFS('Cairo-Regular.ttf', fontRegularBase64);
-        doc.addFont('Cairo-Regular.ttf', 'Cairo', 'normal');
-    }
-    if (fontBoldBase64) {
-        doc.addFileToVFS('Cairo-Bold.ttf', fontBoldBase64);
-        doc.addFont('Cairo-Bold.ttf', 'Cairo', 'bold');
-    }
-
-    doc.setFont('Cairo', 'normal');
+    // Set a default (Helvetica) font for non-Arabic text like numbers
+    doc.setFont('Helvetica', 'normal');
 
     // Helper: Draw common header on a page
     function drawHeader(pageIndex, qrCodeUrl) {
-        doc.setFont('Cairo', 'bold');
-        
         // Right header (Arabic title & license info)
-        doc.setTextColor(0, 150, 136); // Teal
-        doc.setFontSize(15);
-        doc.text('مؤسسة زوار طيبة', 200, 18, { align: 'right' });
-        doc.setTextColor(0, 0, 0); // Black
-        doc.setFontSize(10);
-        doc.setFont('Cairo', 'normal');
-        doc.text('للنقل البري', 200, 23, { align: 'right' });
-        doc.text('ترخيص رقم - 3500005546', 200, 28, { align: 'right' });
+        addArabicText(doc, 'مؤسسة زوار طيبة', 200, 18, { fontSize: 15, color: '#009688', fontStyle: 'bold', align: 'right' });
+        addArabicText(doc, 'للنقل البري', 200, 23, { fontSize: 10, color: '#000000', fontStyle: 'normal', align: 'right' });
+        addArabicText(doc, 'ترخيص رقم - 3500005546', 200, 28, { fontSize: 9, color: '#000000', fontStyle: 'normal', align: 'right' });
 
         // Center Logo
         if (logoBase64) {
             doc.addImage(logoBase64, 'PNG', 92, 10, 24, 24);
         }
         doc.setFontSize(7);
-        doc.setTextColor(0, 150, 136); // Teal
-        doc.setFont('Cairo', 'bold');
+        doc.setTextColor(0, 150, 136);
         doc.text('Zowar Taiba Land Transport', 104, 37, { align: 'center' });
 
         // Left QR Code
@@ -281,23 +202,22 @@ async function generateTripPdf(data) {
 
     // Helper: Draw common footer on a page
     function drawFooter(footerBarText) {
-        doc.setFont('Cairo', 'normal');
-        doc.setFontSize(7.5);
-        doc.setTextColor(0, 0, 0);
-        
         // Line break dashed
         doc.setLineDashPattern([1, 1], 0);
         doc.line(10, 275, 200, 275);
         
         // Address & Contacts
-        doc.text('📍 المدينة المنورة - الدائري الثاني طريق الملك عبدالله - خلف محطة بيحان', 200, 279, { align: 'right' });
-        doc.text('✉️ zawartaiba@gmail.com | 📞 00966 50 484 5815', 10, 279, { align: 'left' });
+        addArabicText(doc, 'المدينة المنورة - الدائري الثاني طريق الملك عبدالله - خلف محطة بيحان', 200, 279, { fontSize: 7, color: '#000000', align: 'right' });
+        doc.setFontSize(7);
+        doc.setTextColor(0, 0, 0);
+        doc.text('zawartaiba@gmail.com | 00966 50 484 5815', 10, 279, { align: 'left' });
 
         // Footer Bar
-        doc.setFillColor(15, 76, 129); // Blue bar
+        doc.setFillColor(15, 76, 129);
         doc.rect(10, 282, 190, 8, 'F');
-        doc.setTextColor(255, 255, 255); // White text
-        doc.text(footerBarText, 200, 287, { align: 'right' });
+        addArabicText(doc, footerBarText, 198, 287, { fontSize: 7, color: '#ffffff', align: 'right' });
+        doc.setFontSize(7);
+        doc.setTextColor(255, 255, 255);
         doc.text('Zowar Taiba Land Transport | C.R : 3500005546', 12, 287, { align: 'left' });
     }
 
@@ -305,10 +225,7 @@ async function generateTripPdf(data) {
     function drawSectionTitle(y, title) {
         doc.setFillColor(0, 150, 136); // Teal
         doc.rect(10, y, 190, 7, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.setFont('Cairo', 'bold');
-        doc.setFontSize(10);
-        doc.text(title, 105, y + 5, { align: 'center' });
+        addArabicText(doc, title, 105, y + 5, { fontSize: 10, color: '#ffffff', fontStyle: 'bold', align: 'center' });
     }
 
     // ==========================================
@@ -318,137 +235,110 @@ async function generateTripPdf(data) {
     drawHeader(1, data.qrUrl);
     
     // Doc Title
-    doc.setFont('Cairo', 'bold');
-    doc.setFontSize(13);
-    doc.text('كشف الركاب', 105, yPos, { align: 'center' });
-    yPos += 5;
+    addArabicText(doc, 'كشف الركاب', 105, yPos, { fontSize: 13, color: '#000000', fontStyle: 'bold', align: 'center' });
+    yPos += 7;
 
-    // General info (Day, Date, Booking ID)
-    doc.autoTable({
-        startY: yPos,
-        theme: 'plain',
-        styles: { font: 'Cairo', fontSize: 9, cellPadding: 2, textColor: [0, 0, 0], fontStyle: 'bold' },
-        columnStyles: {
-            0: { align: 'right', fillColor: [245, 245, 245], minCellHeight: 10 },
-            1: { align: 'right', fillColor: [245, 245, 245] },
-            2: { align: 'right', fillColor: [245, 245, 245] }
-        },
-        body: [[
-            `اليوم: ${data.dayString}`,
-            `التاريخ: ${data.dateString}`,
-            `رقم الحجز: ${data.bookingId}`
-        ]],
-        margin: { left: 10, right: 10 }
-    });
-
-    yPos = doc.lastAutoTable.finalY + 4;
+    // General info row: render as separate addArabicText items
+    // Use a plain gray box
+    doc.setFillColor(245, 245, 245);
+    doc.rect(10, yPos, 190, 10, 'F');
+    doc.setDrawColor(220, 220, 220);
+    doc.rect(10, yPos, 190, 10, 'S');
+    addArabicText(doc, `اليوم: ${data.dayString}`, 70, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    addArabicText(doc, `التاريخ: ${data.dateString}`, 140, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    addArabicText(doc, `رقم الحجز: ${data.bookingId}`, 200, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    yPos += 14;
 
     // Driver Section Title
     drawSectionTitle(yPos, 'بيانات السائق');
     yPos += 9;
 
-    // Driver Details Table
-    doc.autoTable({
-        startY: yPos,
-        theme: 'grid',
-        styles: { font: 'Cairo', fontSize: 8.5, cellPadding: 2, lineColor: [220, 220, 220] },
-        headStyles: { fillColor: [0, 150, 136], textColor: [255, 255, 255], fontStyle: 'bold', align: 'center' },
-        columnStyles: {
-            0: { align: 'right', width: 63 },
-            1: { align: 'right', width: 63 },
-            2: { align: 'right', width: 64 }
-        },
-        body: [
-            [`السائق: ${data.driverName}`, `الهويه: ${data.nationalId}`, `الجوال: ${data.mobile}`],
-            [`السيارة: ${data.carModel}`, `اللون: ${data.carColor}`, `رقم اللوحه: ${data.plateNumber}`]
-        ],
-        margin: { left: 10, right: 10 }
-    });
+    // Driver Details: render as manual grid rows
+    const driverRows = [
+        ['الجوال', `${data.mobile}`, 'الهويه', `${data.nationalId}`, 'السائق', `${data.driverName}`],
+        ['رقم اللوحه', `${data.plateNumber}`, 'اللون', `${data.carColor}`, 'السيارة', `${data.carModel}`]
+    ];
+    const colW = [20, 43, 20, 43, 20, 44];
+    const colX = [10, 30, 73, 93, 136, 156];
+    for (const row of driverRows) {
+        let rowH = 8;
+        // Draw border
+        doc.setDrawColor(220, 220, 220);
+        doc.rect(10, yPos, 190, rowH, 'S');
+        // Draw cells
+        for (let c = 0; c < 6; c++) {
+            doc.rect(colX[c], yPos, colW[c], rowH, 'S');
+            // Odd cols = label (Arabic), even cols = value
+            addArabicText(doc, row[c], colX[c] + colW[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 0 ? 'bold' : 'normal', align: 'right' });
+        }
+        yPos += rowH;
+    }
+    yPos += 4;
 
-    yPos = doc.lastAutoTable.finalY + 4;
+    // Route Row
+    doc.setDrawColor(220, 220, 220);
+    doc.rect(10, yPos, 190, 8, 'S');
+    doc.rect(10, yPos, 95, 8, 'S');
+    doc.rect(105, yPos, 95, 8, 'S');
+    addArabicText(doc, `جهة القدوم: ${data.source}`, 104, yPos + 6, { fontSize: 8.5, color: '#000000', align: 'right' });
+    addArabicText(doc, `جهة الوصول: ${data.destination}`, 199, yPos + 6, { fontSize: 8.5, color: '#000000', align: 'right' });
+    yPos += 12;
 
-    // Route Table
-    doc.autoTable({
-        startY: yPos,
-        theme: 'grid',
-        styles: { font: 'Cairo', fontSize: 8.5, cellPadding: 2, lineColor: [220, 220, 220] },
-        columnStyles: {
-            0: { align: 'right', width: 95 },
-            1: { align: 'right', width: 95 }
-        },
-        body: [
-            [`جهة القدوم: ${data.source}`, `جهة الوصول: ${data.destination}`]
-        ],
-        margin: { left: 10, right: 10 }
-    });
-
-    yPos = doc.lastAutoTable.finalY + 4;
-
-    // Guest Table
-    doc.autoTable({
-        startY: yPos,
-        theme: 'grid',
-        styles: { font: 'Cairo', fontSize: 8.5, cellPadding: 2, lineColor: [220, 220, 220] },
-        columnStyles: {
-            0: { align: 'right', width: 63 },
-            1: { align: 'right', width: 63 },
-            2: { align: 'right', width: 64 }
-        },
-        body: [
-            [`الضيف: ${data.guestName}`, `الجوال: ${data.guestPhone}`, `رقم الرحله: ${data.flightNo}`]
-        ],
-        margin: { left: 10, right: 10 }
-    });
-
-    yPos = doc.lastAutoTable.finalY + 4;
+    // Guest Row
+    doc.setDrawColor(220, 220, 220);
+    doc.rect(10, yPos, 190, 8, 'S');
+    doc.rect(10, yPos, 63, 8, 'S');
+    doc.rect(73, yPos, 64, 8, 'S');
+    doc.rect(137, yPos, 63, 8, 'S');
+    addArabicText(doc, `الضيف: ${data.guestName}`, 72, yPos + 6, { fontSize: 8.5, color: '#000000', align: 'right' });
+    addArabicText(doc, `الجوال: ${data.guestPhone}`, 136, yPos + 6, { fontSize: 8.5, color: '#000000', align: 'right' });
+    addArabicText(doc, `رقم الرحله: ${data.flightNo}`, 199, yPos + 6, { fontSize: 8.5, color: '#000000', align: 'right' });
+    yPos += 12;
 
     // Companions Title
     drawSectionTitle(yPos, 'بيانات المرافقين');
     yPos += 9;
 
-    // Build companion side-by-side table rows
-    const compRows = [];
+    // Companions table header
+    const hdrH = 7;
+    const compCols = [8, 44, 28, 15, 8, 44, 28, 15]; // widths in mm
+    const compHdrs = ['#', 'الاسم', 'رقم الهوية', 'الجنسية', '#', 'الاسم', 'رقم الهوية', 'الجنسية'];
+    doc.setFillColor(0, 150, 136);
+    let cx = 10;
+    for (let c = 0; c < compCols.length; c++) {
+        doc.rect(cx, yPos, compCols[c], hdrH, 'F');
+        addArabicText(doc, compHdrs[c], cx + compCols[c] - 1, yPos + 5, { fontSize: 8, color: '#ffffff', fontStyle: 'bold', align: 'right' });
+        cx += compCols[c];
+    }
+    yPos += hdrH;
+
+    // Companion rows
     for (let i = 0; i < 6; i++) {
         const left = data.companions[i] || { name: '', id: '', nationality: '' };
         const right = data.companions[i + 6] || { name: '', id: '', nationality: '' };
-        compRows.push([
+        const rowVals = [
             String(i + 1), left.name, left.id, left.nationality,
             String(i + 7), right.name, right.id, right.nationality
-        ]);
+        ];
+        const rH = 7;
+        cx = 10;
+        doc.setDrawColor(200, 200, 200);
+        for (let c = 0; c < compCols.length; c++) {
+            doc.rect(cx, yPos, compCols[c], rH, 'S');
+            if (rowVals[c]) {
+                addArabicText(doc, rowVals[c], cx + compCols[c] - 1, yPos + 5, { fontSize: 7.5, color: '#000000', align: 'right' });
+            }
+            cx += compCols[c];
+        }
+        yPos += rH;
     }
-
-    doc.autoTable({
-        startY: yPos,
-        theme: 'grid',
-        styles: { font: 'Cairo', fontSize: 7.5, cellPadding: 1.5, lineColor: [200, 200, 200] },
-        headStyles: { fillColor: [0, 150, 136], textColor: [255, 255, 255], fontStyle: 'bold', align: 'center' },
-        head: [['#', 'الاسم', 'رقم الهوية', 'الجنسية', '#', 'الاسم', 'رقم الهوية', 'الجنسية']],
-        body: compRows,
-        columnStyles: {
-            0: { align: 'center', width: 8 },
-            1: { align: 'right', width: 44 },
-            2: { align: 'center', width: 28 },
-            3: { align: 'center', width: 15 },
-            4: { align: 'center', width: 8 },
-            5: { align: 'right', width: 44 },
-            6: { align: 'center', width: 28 },
-            7: { align: 'center', width: 15 }
-        },
-        margin: { left: 10, right: 10 }
-    });
-
-    yPos = doc.lastAutoTable.finalY + 4;
+    yPos += 4;
 
     // Important Notice block + Stamp
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('Cairo', 'bold');
-    doc.setFontSize(8.5);
-    doc.text('ملاحظة هامة', 105, yPos, { align: 'center' });
-    yPos += 4;
-    doc.setFont('Cairo', 'normal');
-    doc.setFontSize(8);
-    doc.text('في حالة عدم تطابق بيانات الضيف مع الاثبات تكن عرضه للجزاء وهذا تعهد منا بذلك', 105, yPos, { align: 'center' });
-    doc.text('شاكرين لكم حسن تعاونكم معنا', 105, yPos + 4, { align: 'center' });
+    addArabicText(doc, 'ملاحظة هامة', 105, yPos, { fontSize: 8.5, color: '#000000', fontStyle: 'bold', align: 'center' });
+    yPos += 5;
+    addArabicText(doc, 'في حالة عدم تطابق بيانات الضيف مع الاثبات تكن عرضه للجزاء وهذا تعهد منا بذلك', 105, yPos, { fontSize: 8, color: '#000000', align: 'center' });
+    addArabicText(doc, 'شاكرين لكم حسن تعاونكم معنا', 105, yPos + 5, { fontSize: 8, color: '#000000', align: 'center' });
 
     // Official Stamp
     if (stampBase64) {
@@ -465,70 +355,52 @@ async function generateTripPdf(data) {
     yPos = 43;
 
     // Doc Title
-    doc.setFont('Cairo', 'bold');
-    doc.setFontSize(13);
-    doc.text('عقد نقل على الطرق البرية', 105, yPos, { align: 'center' });
-    yPos += 5;
+    addArabicText(doc, 'عقد نقل على الطرق البرية', 105, yPos, { fontSize: 13, color: '#000000', fontStyle: 'bold', align: 'center' });
+    yPos += 7;
 
-    // Date Table
-    doc.autoTable({
-        startY: yPos,
-        theme: 'plain',
-        styles: { font: 'Cairo', fontSize: 9, cellPadding: 2, textColor: [0, 0, 0], fontStyle: 'bold' },
-        columnStyles: {
-            0: { align: 'right', fillColor: [245, 245, 245] }
-        },
-        body: [[`التاريخ: ${data.dateString}`]],
-        margin: { left: 130, right: 10 }
-    });
-
-    yPos = doc.lastAutoTable.finalY + 8;
-
-    // Legal Text
-    doc.setFont('Cairo', 'normal');
-    doc.setFontSize(9.5);
-    const splitText1 = doc.splitTextToSize('تم ابرام هذا العقد بين المتعاقدين بناء على المادة (39) التاسعة والثلاثون من اللائحة المنظمة لنشاط النقل المتخصص وتأجير وتوجيه الحافلات وبناء على الفقرة (1) من المادة (39) والتي تنص على أن يجب على الناقل ابرام عقد نقل مع الأطراف المحددين في المادة (40) قبل تنفيذ عمليات النقل على الطرق البرية وبما لا يخالف أحكام هذه اللائحة ووفقاً للآلية التي تحددها هيئة النقل وبناء على ما سبق تم ابرام عقد النقل بين الأطراف الآتية:', 180);
-    doc.text(splitText1, 200, yPos, { align: 'right', lineHeightFactor: 1.6 });
-    yPos += 34;
-
-    // Parties
-    doc.setFont('Cairo', 'bold');
-    doc.text(`الطرف الأول / مؤسسة زوار طيبة للنقل البري ترخيص رقم - 3500005546`, 200, yPos, { align: 'right' });
-    doc.text(`الطرف الثاني / ${data.guestName}`, 200, yPos + 6, { align: 'right' });
+    // Date row
+    doc.setFillColor(245, 245, 245);
+    doc.rect(130, yPos, 70, 9, 'F');
+    doc.setDrawColor(220, 220, 220);
+    doc.rect(130, yPos, 70, 9, 'S');
+    addArabicText(doc, `التاريخ: ${data.dateString}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
     yPos += 16;
 
+    // Legal Text (long paragraph - split into multiple lines)
+    const legalText = 'تم ابرام هذا العقد بين المتعاقدين بناء على المادة (39) التاسعة والثلاثون من اللائحة المنظمة لنشاط النقل المتخصص وتأجير وتوجيه الحافلات';
+    addArabicText(doc, legalText, 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
+    yPos += 10;
+    const legalText2 = 'بناء على الفقرة (1) من المادة (39) والتي تنص على أن يجب على الناقل ابرام عقد نقل مع الأطراف المحددين في المادة (40) قبل تنفيذ عمليات النقل على الطرق البرية';
+    addArabicText(doc, legalText2, 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
+    yPos += 10;
+    const legalText3 = 'وبناء على ما سبق تم ابرام عقد النقل بين الأطراف الآتية:';
+    addArabicText(doc, legalText3, 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
+    yPos += 10;
+
+    // Parties
+    addArabicText(doc, `الطرف الأول / مؤسسة زوار طيبة للنقل البري ترخيص رقم - 3500005546`, 200, yPos, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    yPos += 7;
+    addArabicText(doc, `الطرف الثاني / ${data.guestName}`, 200, yPos, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    yPos += 12;
+
     // Description text
-    doc.setFont('Cairo', 'normal');
-    doc.text('اتفق الطرفان على ان ينفذ الطرف الأول عملية النقل للطرف الثاني مع مرافقيه وذويهم من الموقع المحدد مسبقاً مع الطرف الثاني وتوصيلهم الى الجهه المحدده بالعقد.', 200, yPos, { align: 'right', maxWidth: 180 });
-    yPos += 14;
+    addArabicText(doc, 'اتفق الطرفان على ان ينفذ الطرف الأول عملية النقل للطرف الثاني مع مرافقيه وذويهم من الموقع المحدد مسبقاً وتوصيلهم الى الجهه المحدده بالعقد.', 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
+    yPos += 10;
 
     // Route Details
-    doc.autoTable({
-        startY: yPos,
-        theme: 'grid',
-        styles: { font: 'Cairo', fontSize: 9, cellPadding: 3, lineColor: [220, 220, 220] },
-        columnStyles: {
-            0: { align: 'right', width: 90 },
-            1: { align: 'right', width: 90 }
-        },
-        body: [
-            [`النقل من: ${data.source}`, `وصولاً الى: ${data.destination}`]
-        ],
-        margin: { left: 10, right: 10 }
-    });
-
-    yPos = doc.lastAutoTable.finalY + 10;
+    doc.setDrawColor(220, 220, 220);
+    doc.rect(10, yPos, 190, 10, 'S');
+    doc.rect(10, yPos, 95, 10, 'S');
+    addArabicText(doc, `النقل من: ${data.source}`, 104, yPos + 7, { fontSize: 9, color: '#000000', align: 'right' });
+    addArabicText(doc, `وصولاً الى: ${data.destination}`, 199, yPos + 7, { fontSize: 9, color: '#000000', align: 'right' });
+    yPos += 18;
 
     // Terms
-    const splitText2 = doc.splitTextToSize('في حال الغاء التعاقد لاي سبب شخصي او اسباب اخرى تتعلق في الحجوزات او الانظمة تكون سياسة الالغاء والاستبدال حسب نظام وزارة التجارة السعودي.', 180);
-    const splitText3 = doc.splitTextToSize('في حال الحجز وتم الالغاء قبل موعد الرحلة باكثر من 24 ساعة يتم استرداد المبلغ كامل.', 180);
-    const splitText4 = doc.splitTextToSize('في حالة طلب الطرف الثاني الحجز من خلال الموقع الالكتروني للموقع يعتبر الحجز وموافقته على الشروط الاحكام بالموقع الالكتروني هو موافقة على هذا العقد لتنفيذ عملية النقل المتفق عليها مع الطرف الأول بواسطة حافلات المؤسسة المرخصة والمتوافقة مع الاشتراطات المقررة من هيئة النقل.', 180);
-
-    doc.text(splitText2, 200, yPos, { align: 'right', lineHeightFactor: 1.5 });
-    yPos += 14;
-    doc.text(splitText3, 200, yPos, { align: 'right', lineHeightFactor: 1.5 });
+    addArabicText(doc, 'في حال الغاء التعاقد لاي سبب شخصي او اسباب اخرى تتعلق في الحجوزات او الانظمة تكون سياسة الالغاء والاستبدال حسب نظام وزارة التجارة السعودي.', 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
     yPos += 10;
-    doc.text(splitText4, 200, yPos, { align: 'right', lineHeightFactor: 1.5 });
+    addArabicText(doc, 'في حال الحجز وتم الالغاء قبل موعد الرحلة باكثر من 24 ساعة يتم استرداد المبلغ كامل.', 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
+    yPos += 10;
+    addArabicText(doc, 'في حالة طلب الحجز من خلال الموقع الالكتروني يعتبر الحجز وموافقته على الشروط الاحكام موافقة على هذا العقد.', 200, yPos, { fontSize: 9, color: '#000000', align: 'right' });
 
     drawFooter('امر تشغيل شامل كشف الركاب تم إصداره إلكترونيا من السيستم');
 
@@ -540,98 +412,81 @@ async function generateTripPdf(data) {
     yPos = 43;
 
     // Doc Title
-    doc.setFont('Cairo', 'bold');
-    doc.setFontSize(13);
-    doc.text('سجل الفحص اليومي للسيارة', 105, yPos, { align: 'center' });
-    yPos += 5;
+    addArabicText(doc, 'سجل الفحص اليومي للسيارة', 105, yPos, { fontSize: 13, color: '#000000', fontStyle: 'bold', align: 'center' });
+    yPos += 7;
 
-    // Metadata
-    doc.autoTable({
-        startY: yPos,
-        theme: 'plain',
-        styles: { font: 'Cairo', fontSize: 9, cellPadding: 2, textColor: [0, 0, 0], fontStyle: 'bold' },
-        columnStyles: {
-            0: { align: 'right', fillColor: [245, 245, 245] },
-            1: { align: 'right', fillColor: [245, 245, 245] }
-        },
-        body: [[`التاريخ: ${data.dateString}`, `رقم الحجز: ${data.bookingId}`]],
-        margin: { left: 10, right: 10 }
-    });
+    // Metadata rows
+    doc.setFillColor(245, 245, 245);
+    doc.rect(10, yPos, 190, 9, 'F');
+    doc.setDrawColor(220, 220, 220);
+    doc.rect(10, yPos, 190, 9, 'S');
+    addArabicText(doc, `التاريخ: ${data.dateString}`, 104, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    addArabicText(doc, `رقم الحجز: ${data.bookingId}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    yPos += 12;
 
-    yPos = doc.lastAutoTable.finalY + 3;
+    doc.setFillColor(245, 245, 245);
+    doc.rect(10, yPos, 190, 9, 'F');
+    doc.rect(10, yPos, 190, 9, 'S');
+    addArabicText(doc, `السائق: ${data.driverName}`, 104, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    addArabicText(doc, `رقم اللوحه: ${data.plateNumber}`, 199, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+    yPos += 12;
 
-    doc.autoTable({
-        startY: yPos,
-        theme: 'plain',
-        styles: { font: 'Cairo', fontSize: 9, cellPadding: 2, textColor: [0, 0, 0], fontStyle: 'bold' },
-        columnStyles: {
-            0: { align: 'right', fillColor: [245, 245, 245] },
-            1: { align: 'right', fillColor: [245, 245, 245] }
-        },
-        body: [[`السائق: ${data.driverName}`, `رقم اللوحه: ${data.plateNumber}`]],
-        margin: { left: 10, right: 10 }
-    });
-
-    yPos = doc.lastAutoTable.finalY + 4;
-
-    // Helper to generate inspection table
-    function makeInspectionAutoTable(title, items, y) {
-        doc.setFont('Cairo', 'bold');
-        doc.setFontSize(9);
-        doc.text(title, 200, y, { align: 'right' });
+    // Helper to generate inspection table using canvas-based text
+    function makeInspectionTable(title, items, y) {
+        addArabicText(doc, title, 200, y + 4, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
+        y += 7;
         
-        const rows = items.map(item => [item, '✓', '', '']);
-        doc.autoTable({
-            startY: y + 2,
-            theme: 'grid',
-            styles: { font: 'Cairo', fontSize: 7.5, cellPadding: 1.2, lineColor: [210, 210, 210] },
-            headStyles: { fillColor: [235, 235, 235], textColor: [0, 0, 0], fontStyle: 'bold', align: 'center' },
-            head: [['البند', 'سليم', 'غير سليم', 'ملاحظات']],
-            body: rows,
-            columnStyles: {
-                0: { align: 'right', width: 90 },
-                1: { align: 'center', width: 25, textColor: [0, 150, 136], fontStyle: 'bold' },
-                2: { align: 'center', width: 25 },
-                3: { align: 'center', width: 40 }
-            },
-            margin: { left: 10, right: 10 }
-        });
-        return doc.lastAutoTable.finalY;
+        // Header row
+        const iCols = [90, 25, 25, 50]; // widths
+        const iX    = [10, 100, 125, 150];
+        const iHdrs = ['البند', 'سليم', 'غير سليم', 'ملاحظات'];
+        doc.setFillColor(235, 235, 235);
+        for (let c = 0; c < 4; c++) {
+            doc.rect(iX[c], y, iCols[c], 6, 'F');
+            doc.rect(iX[c], y, iCols[c], 6, 'S');
+            addArabicText(doc, iHdrs[c], iX[c] + iCols[c] - 1, y + 4.5, { fontSize: 7.5, color: '#000000', fontStyle: 'bold', align: 'right' });
+        }
+        y += 6;
+        
+        // Item rows
+        for (const item of items) {
+            for (let c = 0; c < 4; c++) {
+                doc.rect(iX[c], y, iCols[c], 6, 'S');
+            }
+            addArabicText(doc, item, iX[0] + iCols[0] - 1, y + 4.5, { fontSize: 7.5, color: '#000000', align: 'right' });
+            // Checkmark in 'Salim' column
+            doc.setTextColor(0, 150, 136);
+            doc.setFontSize(8);
+            doc.text('✓', iX[1] + iCols[1] / 2, y + 4, { align: 'center' });
+            doc.setTextColor(0, 0, 0);
+            y += 6;
+        }
+        return y;
     }
 
-    yPos = makeInspectionAutoTable('أولاً - فحص مؤشرات لوحة القيادة', [
+    yPos = makeInspectionTable('أولاً - فحص مؤشرات لوحة القيادة', [
         'مؤشر الوقود', 'مؤشر الحرارة', 'مؤشر ضغط الزيت', 'لمبة فحص المحرك', 'ABS', 'لمبات التحذير'
     ], yPos);
 
-    yPos = makeInspectionAutoTable('ثانياً - الفحص الخارجي', [
+    yPos = makeInspectionTable('ثانياً - الفحص الخارجي', [
         'الإطارات وضغط الهواء', 'الأنوار الأمامية والخلفية', 'الإشارات التحذيرية', 'الزجاج والمرايا', 'عدم وجود تسريبات'
     ], yPos + 4);
 
-    yPos = makeInspectionAutoTable('ثالثاً - أدوات ومتمتلكات الأمن والسلامة', [
+    yPos = makeInspectionTable('ثالثاً - أدوات ومتمتلكات الأمن والسلامة', [
         'طفاية حريق', 'مثلث تحذير', 'حقيبة إسعافات أولية', 'مطرقة كسر الزجاج', 'أحزمة الأمان'
     ], yPos + 4);
 
     yPos += 5;
 
     // Declaration Box
-    doc.autoTable({
-        startY: yPos,
-        theme: 'grid',
-        styles: { font: 'Cairo', fontSize: 8, cellPadding: 2.5, lineColor: [0, 0, 0] },
-        body: [[
-            `إقرار\nأقر أنا السائق أعلاه بأنني قمت بفحص الحافلة والتأكد من سلامتها وجاهزيتها قبل التشغيل.`
-        ]],
-        columnStyles: {
-            0: { align: 'right', fillColor: [255, 255, 255] }
-        },
-        margin: { left: 10, right: 10 }
-    });
-
-    yPos = doc.lastAutoTable.finalY + 6;
+    doc.setDrawColor(0, 0, 0);
+    doc.rect(10, yPos, 190, 18, 'S');
+    addArabicText(doc, 'إقرار', 199, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: 'bold', align: 'right' });
+    addArabicText(doc, 'أقر أنا السائق أعلاه بأنني قمت بفحص الحافلة والتأكد من سلامتها وجاهزيتها قبل التشغيل.', 199, yPos + 13, { fontSize: 8, color: '#000000', align: 'right' });
+    yPos += 24;
 
     // Signature
-    doc.setFont('Cairo', 'normal');
-    doc.text(`اسم السائق - ${data.driverName}`, 15, yPos, { align: 'left' });
+    addArabicText(doc, `اسم السائق - ${data.driverName}`, 15, yPos, { fontSize: 9, color: '#000000', align: 'left' });
 
     drawFooter('سجل فحص يومي للسيارة تم إصداره إلكترونيا من السيستم');
 

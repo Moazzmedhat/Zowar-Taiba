@@ -29,8 +29,8 @@
                 // Fallback: fetch Cairo TTF files and register manually
                 try {
                     const [regular, bold] = await Promise.all([
-                        fetch('https://unpkg.com/pdfmake-rtl/fonts/Cairo/Cairo-Regular.ttf').then(r => r.arrayBuffer()),
-                        fetch('https://unpkg.com/pdfmake-rtl/fonts/Cairo/Cairo-Bold.ttf').then(r => r.arrayBuffer())
+                        fetch('fonts/Cairo/Cairo-Regular.ttf').then(r => r.arrayBuffer()),
+                        fetch('fonts/Cairo/Cairo-Bold.ttf').then(r => r.arrayBuffer())
                     ]);
                     function bufToBase64(buf) {
                         let binary = '';

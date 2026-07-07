@@ -311,24 +311,28 @@ async function generateTripPdf(data) {
     }
     yPos += 4;
 
-    // Route Row
+    // Route Row (Separated Label and Value cells)
+    const routeCols = [65, 30, 65, 30];
+    const routeX = [10, 75, 105, 170];
+    const routeVals = [`${data.source}`, 'جهة القدوم', `${data.destination}`, 'جهة الوصول'];
     doc.setDrawColor(220, 220, 220);
     doc.rect(10, yPos, 190, 8, 'S');
-    doc.rect(10, yPos, 95, 8, 'S');
-    doc.rect(105, yPos, 95, 8, 'S');
-    addArabicText(doc, `جهة القدوم: ${data.source}`, 104, yPos + 6, { fontSize: 8.5, color: '#000000', align: 'right' });
-    addArabicText(doc, `جهة الوصول: ${data.destination}`, 199, yPos + 6, { fontSize: 8.5, color: '#000000', align: 'right' });
+    for (let c = 0; c < 4; c++) {
+        doc.rect(routeX[c], yPos, routeCols[c], 8, 'S');
+        addArabicText(doc, routeVals[c], routeX[c] + routeCols[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right' });
+    }
     yPos += 12;
 
-    // Guest Row
+    // Guest Row (Separated Label and Value cells matching the driver grid)
+    const guestCols = [43, 20, 43, 20, 44, 20];
+    const guestX = [10, 53, 73, 116, 136, 180];
+    const guestVals = [`${data.flightNo}`, 'رقم الرحله', `${data.guestPhone}`, 'الجوال', `${data.guestName}`, 'الضيف'];
     doc.setDrawColor(220, 220, 220);
     doc.rect(10, yPos, 190, 8, 'S');
-    doc.rect(10, yPos, 63, 8, 'S');
-    doc.rect(73, yPos, 64, 8, 'S');
-    doc.rect(137, yPos, 63, 8, 'S');
-    addArabicText(doc, `الضيف: ${data.guestName}`, 72, yPos + 6, { fontSize: 8.5, color: '#000000', align: 'right' });
-    addArabicText(doc, `الجوال: ${data.guestPhone}`, 136, yPos + 6, { fontSize: 8.5, color: '#000000', align: 'right' });
-    addArabicText(doc, `رقم الرحله: ${data.flightNo}`, 199, yPos + 6, { fontSize: 8.5, color: '#000000', align: 'right' });
+    for (let c = 0; c < 6; c++) {
+        doc.rect(guestX[c], yPos, guestCols[c], 8, 'S');
+        addArabicText(doc, guestVals[c], guestX[c] + guestCols[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right' });
+    }
     yPos += 12;
 
     // Companions Title

@@ -348,15 +348,16 @@ async function generateTripPdf(data) {
     drawDocTitle('كشف الركاب');
     yPos = 52;
 
-    // General info row: render as separate addArabicText items
-    // Use a plain gray box
+    // General info row: divided into 3 equal centered sections to fill the box beautifully
     doc.setFillColor(245, 245, 245);
     doc.rect(10, yPos, 190, 10, 'F');
     doc.setDrawColor(220, 220, 220);
     doc.rect(10, yPos, 190, 10, 'S');
-    addArabicText(doc, `اليوم: ${data.dayString}`, 70, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
-    addArabicText(doc, `التاريخ: ${data.dateString}`, 140, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
-    addArabicText(doc, `رقم الحجز: ${data.bookingId}`, 200, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
+    
+    // Width is 190mm total. Three centers at: 10 + 190/6, 10 + 190/2, 10 + 5*190/6
+    addArabicText(doc, `اليوم: ${data.dayString}`, 10 + 190/6, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'center', transparent: true });
+    addArabicText(doc, `التاريخ: ${data.dateString}`, 10 + 190/2, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'center', transparent: true });
+    addArabicText(doc, `رقم الحجز: ${data.bookingId}`, 10 + 5*190/6, yPos + 7, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'center', transparent: true });
     yPos += 14;
 
     // Driver Section Title
@@ -461,7 +462,7 @@ async function generateTripPdf(data) {
         }
         yPos += rH;
     }
-    yPos += 4;
+    yPos += 12;
 
     // Important Notice block + Stamp
     addArabicText(doc, 'ملاحظة هامة', 105, yPos, { fontSize: 8.5, color: '#000000', fontStyle: 'bold', align: 'center' });

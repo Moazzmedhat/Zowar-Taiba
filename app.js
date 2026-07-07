@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // DOM Elements - Inputs
     const inputLoginId = document.getElementById('login-id');
-    const inputLoginPlate = document.getElementById('login-plate');
+    const inputLoginPlateLetters = document.getElementById('login-plate-letters');
+    const inputLoginPlateNumbers = document.getElementById('login-plate-numbers');
     const loginError = document.getElementById('login-error');
 
     // DOM Elements - Badge info
@@ -234,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
     formLogin.addEventListener('submit', (e) => {
         e.preventDefault();
         const nationalId = inputLoginId.value.trim();
-        const plateNumber = inputLoginPlate.value.trim();
+        const plateNumber = (inputLoginPlateLetters.value.trim() + ' ' + inputLoginPlateNumbers.value.trim()).trim();
 
         // Find driver matching ID and Plate
         const driver = drivers.find(d => 

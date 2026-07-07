@@ -36,8 +36,11 @@
                         <input type="text" id="login-id" placeholder="مثال: 2529198794" required>
                     </div>
                     <div class="form-group">
-                        <label for="login-plate">رقم لوحة السيارة</label>
-                        <input type="text" id="login-plate" placeholder="مثال: ا ط ل 1323" required>
+                        <label>رقم لوحة السيارة</label>
+                        <div style="display:flex; gap:8px;">
+                            <input type="text" id="login-plate-letters" placeholder="الحروف (مثال: أ ب ج)" required style="flex:1;">
+                            <input type="text" id="login-plate-numbers" placeholder="الأرقام (مثال: 1234)" required style="flex:1;">
+                        </div>
                     </div>
                     <div id="login-error" class="error-message">بيانات السائق غير مطابقة، يرجى التحقق من رقم الهوية أو رقم اللوحة.</div>
                     <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 10px;">

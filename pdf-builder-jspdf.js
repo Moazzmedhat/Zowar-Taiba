@@ -23,37 +23,43 @@ let arabicCanvasFont = 'Cairo, Arial, sans-serif';
  */
 function renderArabicToCanvas(text, fontSize, color, fontWeight) {
     if (!text) return null;
-    
-    const scale = 3; // Retina scale for crisp text
-    const fontStr = `${fontWeight || 'normal'} ${fontSize * scale}px ${arabicCanvasFont}`;
-    
-    // Measure text width
-    const measurer = document.createElement('canvas');
-    const mctx = measurer.getContext('2d');
-    mctx.font = fontStr;
-    const metrics = mctx.measureText(text);
-    const textWidthPx = Math.ceil(metrics.width) + 20; // slight padding
-    const textHeightPx = Math.ceil(fontSize * scale * 1.5);
-    
-    // Render text
-    const canvas = document.createElement('canvas');
-    canvas.width = textWidthPx;
-    canvas.height = textHeightPx;
-    const ctx = canvas.getContext('2d');
-    
-    ctx.font = fontStr;
-    ctx.fillStyle = color || '#000000';
-    ctx.textBaseline = 'middle';
-    ctx.direction = 'rtl';
-    ctx.textAlign = 'right';
-    // Draw text from the right edge
-    ctx.fillText(text, textWidthPx - 5, textHeightPx / 2);
-    
-    return {
-        dataUrl: canvas.toDataURL('image/png'),
-        widthPx: textWidthPx,
-        heightPx: textHeightPx
-    };
+    try {
+        const scale = 3; // Retina scale for crisp text
+        const fontStr = `${fontWeight || 'normal'} ${fontSize * scale}px ${arabicCanvasFont}`;
+        
+        // Measure text width
+        const measurer = document.createElement('canvas');
+        const mctx = measurer.getContext('2d');
+        if (!mctx) return null;
+        mctx.font = fontStr;
+        const metrics = mctx.measureText(text);
+        const textWidthPx = Math.ceil(metrics.width || 10) + 20; // slight padding
+        const textHeightPx = Math.ceil(fontSize * scale * 1.5);
+        
+        // Render text
+        const canvas = document.createElement('canvas');
+        canvas.width = textWidthPx;
+        canvas.height = textHeightPx;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return null;
+        
+        ctx.font = fontStr;
+        ctx.fillStyle = color || '#000000';
+        ctx.textBaseline = 'middle';
+        ctx.direction = 'rtl';
+        ctx.textAlign = 'right';
+        // Draw text from the right edge
+        ctx.fillText(text, textWidthPx - 5, textHeightPx / 2);
+        
+        return {
+            dataUrl: canvas.toDataURL('image/png'),
+            widthPx: textWidthPx,
+            heightPx: textHeightPx
+        };
+    } catch (e) {
+        console.error("Canvas rendering failed:", e);
+        return null;
+    }
 }
 
 /**
@@ -70,36 +76,56 @@ function renderArabicToCanvas(text, fontSize, color, fontWeight) {
 function addArabicText(doc, text, xMm, yMm, options = {}) {
     if (!text || !text.toString().trim()) return 0;
     
-    const str = text.toString();
-    const fontSize = options.fontSize || doc.getFontSize();
-    const color = options.color || '#000000';
-    const fontWeight = (options.fontStyle === 'bold') ? 'bold' : 'normal';
-    const align = options.align || 'right';
-    
-    const rendered = renderArabicToCanvas(str, fontSize * 1.5, color, fontWeight);
-    if (!rendered) return 0;
-    
-    // Convert pixels to mm (at 96 DPI: 1mm = 3.7795px; we used scale=3 so actual px / 3 / 3.7795)
-    const scale = 3;
-    const pxToMm = 1 / (3.7795 * scale);
-    const widthMm = rendered.widthPx * pxToMm;
-    const heightMm = rendered.heightPx * pxToMm;
-    
-    // Adjust x position based on alignment
-    let drawX = xMm;
-    if (align === 'right') {
-        drawX = xMm - widthMm;
-    } else if (align === 'center') {
-        drawX = xMm - widthMm / 2;
-    } else {
-        drawX = xMm; // left
+    try {
+        const str = text.toString();
+        let fontSize = options.fontSize;
+        if (!fontSize) {
+            try {
+                fontSize = doc.getFontSize();
+            } catch (e) {
+                fontSize = 10;
+            }
+        }
+        const color = options.color || '#000000';
+        const fontWeight = (options.fontStyle === 'bold') ? 'bold' : 'normal';
+        const align = options.align || 'right';
+        
+        const rendered = renderArabicToCanvas(str, fontSize * 1.5, color, fontWeight);
+        if (!rendered) {
+            // Fallback to basic text if canvas fails
+            doc.text(str, xMm, yMm, { align: align });
+            return 10;
+        }
+        
+        // Convert pixels to mm (at 96 DPI: 1mm = 3.7795px; we used scale=3 so actual px / 3 / 3.7795)
+        const scale = 3;
+        const pxToMm = 1 / (3.7795 * scale);
+        const widthMm = rendered.widthPx * pxToMm;
+        const heightMm = rendered.heightPx * pxToMm;
+        
+        // Adjust x position based on alignment
+        let drawX = xMm;
+        if (align === 'right') {
+            drawX = xMm - widthMm;
+        } else if (align === 'center') {
+            drawX = xMm - widthMm / 2;
+        } else {
+            drawX = xMm; // left
+        }
+        
+        // Y is baseline in jsPDF; center the image vertically around it
+        const drawY = yMm - heightMm * 0.7;
+        
+        doc.addImage(rendered.dataUrl, 'PNG', drawX, drawY, widthMm, heightMm);
+        return widthMm;
+    } catch (err) {
+        console.error("addArabicText error:", err);
+        // Absolute fallback to avoid PDF crash
+        try {
+            doc.text(text.toString(), xMm, yMm, { align: options.align || 'right' });
+        } catch (inner) {}
+        return 10;
     }
-    
-    // Y is baseline in jsPDF; center the image vertically around it
-    const drawY = yMm - heightMm * 0.7;
-    
-    doc.addImage(rendered.dataUrl, 'PNG', drawX, drawY, widthMm, heightMm);
-    return widthMm;
 }
 
 

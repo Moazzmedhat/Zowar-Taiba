@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+﻿document.addEventListener('DOMContentLoaded', () => {
     // State variables
     let drivers = [];
     let currentDriver = null;
@@ -89,41 +89,76 @@ document.addEventListener('DOMContentLoaded', () => {
         drivers.forEach((driver, idx) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${driver.driverName}</td>
-                <td>${driver.nationalId}</td>
-                <td>${driver.mobile}</td>
-                <td>${driver.carModel}</td>
-                <td>${driver.plateNumber}</td>
-                <td>${driver.carColor}</td>
+                <td>\</td>
+                <td>\</td>
+                <td>\</td>
+                <td>\</td>
+                <td>\</td>
+                <td>\</td>
                 <td class="actions-cell">
-                    <button class="btn btn-secondary btn-edit" data-index="${idx}" style="padding: 4px 8px; font-size: 0.8rem;">تعديل</button>
-                    <button class="btn btn-danger btn-delete" data-index="${idx}" style="padding: 4px 8px; font-size: 0.8rem;">حذف</button>
+                    <button class="btn btn-secondary btn-edit" data-index="\" style="padding: 4px 8px; font-size: 0.8rem;">ØªØ¹Ø¯ÙŠÙ„</button>
+                    <button class="btn btn-danger btn-delete" data-index="\" style="padding: 4px 8px; font-size: 0.8rem;">Ø­Ø°Ù</button>
                 </td>
-            `;
+            \;
             adminTableBody.appendChild(tr);
         });
 
-        // Add event listeners to CRUD actions
+        // Add Event Listeners for action buttons dynamically
         document.querySelectorAll('.btn-edit').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const idx = e.target.getAttribute('data-index');
+                const idx = parseInt(e.target.getAttribute('data-index'));
                 editDriver(idx);
             });
         });
 
         document.querySelectorAll('.btn-delete').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                const idx = e.target.getAttribute('data-index');
+                const idx = parseInt(e.target.getAttribute('data-index'));
                 deleteDriver(idx);
             });
         });
     }
 
-    // Save or update Driver CRUD
+    function editDriver(index) {
+        const driver = drivers[index];
+        crudIndex.value = index;
+        crudId.value = driver.nationalId;
+        crudPlate.value = driver.plateNumber;
+        crudName.value = driver.driverName;
+        crudMobile.value = driver.mobile;
+        crudModel.value = driver.carModel;
+        crudColor.value = driver.carColor;
+
+        adminFormTitle.textContent = "ØªØ¹Ø¯ÙŠÙ„ Ø¨ÙŠØ§Ù†Ø§Øª Ø³Ø§Ø¦Ù‚";
+        btnCancelCrud.style.display = 'inline-block';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function deleteDriver(index) {
+        if (confirm("Ù‡Ù„ Ø£Ù†Øª Ù…ØªØ£ÙƒØ¯ Ù…Ù† Ø­Ø°Ù Ù‡Ø°Ø§ Ø§Ù„Ø³Ø§Ø¦Ù‚ØŸ")) {
+            drivers.splice(index, 1);
+            localStorage.setItem('bst_drivers', JSON.stringify(drivers));
+            renderAdminTable();
+            resetCrudForm();
+        }
+    }
+
+    function resetCrudForm() {
+        crudIndex.value = '';
+        formCrud.reset();
+        adminFormTitle.textContent = "Ø¥Ø¶Ø§ÙØ© Ø³Ø§Ø¦Ù‚ Ø¬Ø¯ÙŠØ¯";
+        btnCancelCrud.style.display = 'none';
+    }
+
+    btnCancelCrud.addEventListener('click', () => {
+        resetCrudForm();
+    });
+
     formCrud.addEventListener('submit', (e) => {
         e.preventDefault();
-        const index = crudIndex.value;
-        const driverData = {
+
+        const indexVal = crudIndex.value;
+        const newDriver = {
             nationalId: crudId.value.trim(),
             plateNumber: crudPlate.value.trim(),
             driverName: crudName.value.trim(),
@@ -132,51 +167,22 @@ document.addEventListener('DOMContentLoaded', () => {
             carColor: crudColor.value.trim()
         };
 
-        if (index === '') {
-            // Create
-            drivers.push(driverData);
+        if (indexVal === '') {
+            // Add new
+            drivers.push(newDriver);
         } else {
-            // Update
-            drivers[parseInt(index)] = driverData;
+            // Edit existing
+            drivers[parseInt(indexVal)] = newDriver;
         }
 
         localStorage.setItem('bst_drivers', JSON.stringify(drivers));
         renderAdminTable();
         resetCrudForm();
+        alert("ØªÙ… Ø­ÙØ¸ Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª Ø¨Ù†Ø¬Ø§Ø­.");
     });
 
-    function editDriver(idx) {
-        const d = drivers[idx];
-        crudIndex.value = idx;
-        crudId.value = d.nationalId;
-        crudPlate.value = d.plateNumber;
-        crudName.value = d.driverName;
-        crudMobile.value = d.mobile;
-        crudModel.value = d.carModel;
-        crudColor.value = d.carColor;
-        adminFormTitle.textContent = "تعديل بيانات السائق والسيارة";
-    }
-
-    function deleteDriver(idx) {
-        if (confirm("هل أنت متأكد من حذف هذا السائق؟")) {
-            drivers.splice(idx, 1);
-            localStorage.setItem('bst_drivers', JSON.stringify(drivers));
-            renderAdminTable();
-            resetCrudForm();
-        }
-    }
-
-    function resetCrudForm() {
-        formCrud.reset();
-        crudIndex.value = '';
-        adminFormTitle.textContent = "إضافة سائق وسيارة جديدة";
-    }
-
-    btnCancelCrud.addEventListener('click', resetCrudForm);
-
-    // Download updated JSON file
     btnDownloadJson.addEventListener('click', () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(drivers, null, 2));
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(drivers, null, 4));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
         downloadAnchor.setAttribute("download", "drivers.json");
@@ -185,110 +191,126 @@ document.addEventListener('DOMContentLoaded', () => {
         downloadAnchor.remove();
     });
 
+
     // ==========================================
-    // ROUTING & VIEW CONTROLS
+    // NAVIGATION & PORTALS CONTROLLER
     // ==========================================
 
+    function showSection(sectionId) {
+        secLogin.style.display = 'none';
+        secAdminLogin.style.display = 'none';
+        secTripForm.style.display = 'none';
+        secAdmin.style.display = 'none';
+
+        if (sectionId === 'login') secLogin.style.display = 'block';
+        else if (sectionId === 'admin-login') secAdminLogin.style.display = 'block';
+        else if (sectionId === 'trip') secTripForm.style.display = 'block';
+        else if (sectionId === 'admin') secAdmin.style.display = 'block';
+    }
+
     btnShowLogin.addEventListener('click', () => {
-        secLogin.classList.remove('hidden');
-        secAdminLogin.classList.add('hidden');
-        secTripForm.classList.add('hidden');
-        secAdmin.classList.add('hidden');
+        showSection('login');
     });
 
     btnShowAdmin.addEventListener('click', () => {
-        secAdminLogin.classList.remove('hidden');
-        secLogin.classList.add('hidden');
-        secTripForm.classList.add('hidden');
-        secAdmin.classList.add('hidden');
-        formAdminLogin.reset();
-        adminLoginError.style.display = 'none';
+        showSection('admin-login');
     });
 
+    // Handle Admin Password login
     formAdminLogin.addEventListener('submit', (e) => {
         e.preventDefault();
         const username = inputAdminUser.value.trim();
         const password = inputAdminPass.value.trim();
 
-        if (username === "admin" && password === "admin") {
+        if (username === 'admin' && password === 'admin') {
             adminLoginError.style.display = 'none';
-            secAdmin.classList.remove('hidden');
-            secAdminLogin.classList.add('hidden');
-            secLogin.classList.add('hidden');
-            secTripForm.classList.add('hidden');
+            inputAdminPass.value = '';
+            showSection('admin');
         } else {
+            adminLoginError.textContent = "Ø§Ø³Ù… Ø§Ù„Ù…Ø³ØªØ®Ø¯Ù… Ø£Ùˆ ÙƒÙ„Ù…Ø© Ø§Ù„Ù…Ø±ÙˆØ± ØºÙŠØ± ØµØ­ÙŠØ­Ø©.";
             adminLoginError.style.display = 'block';
         }
     });
 
-    // ==========================================
-    // LOGIN & VALIDATION LOGIC
-    // ==========================================
-
+    // Handle Driver login
     formLogin.addEventListener('submit', (e) => {
         e.preventDefault();
-        const nationalId = inputLoginId.value.trim();
-        const plateNumber = inputLoginPlate.value.trim();
 
-        // Find driver matching ID and Plate
-        const driver = drivers.find(d => 
-            d.nationalId === nationalId && 
-            d.plateNumber.replace(/\s+/g, '') === plateNumber.replace(/\s+/g, '')
+        const idNum = inputLoginId.value.trim();
+        const plateNum = inputLoginPlate.value.trim().replace(/\s+/g, ''); // strip spaces for validation comparison
+
+        // Find driver
+        const matched = drivers.find(d => 
+            d.nationalId === idNum && 
+            d.plateNumber.replace(/\s+/g, '') === plateNum
         );
 
-        if (driver) {
-            currentDriver = driver;
+        if (matched) {
             loginError.style.display = 'none';
-            // Show badge
-            badgeName.textContent = driver.driverName;
-            badgeCar.textContent = `${driver.carModel} (${driver.carColor})`;
-            badgePlate.textContent = driver.plateNumber;
-            // Transition view
-            secLogin.classList.add('hidden');
-            secTripForm.classList.remove('hidden');
-            // Reset companion list
-            companions = [];
+            currentDriver = matched;
+
+            // Set UI values
+            badgeName.textContent = currentDriver.driverName;
+            badgeCar.textContent = currentDriver.carModel + " (" + currentDriver.carColor + ")";
+            badgePlate.textContent = currentDriver.plateNumber;
+
+            // Reset form input
+            inputLoginId.value = '';
+            inputLoginPlate.value = '';
+
+            // Auto initialize first companion item
+            companions = [{ name: '', id: '', nationality: '' }];
             renderCompanions();
+
+            // Redirect
+            showSection('trip');
         } else {
+            loginError.textContent = "Ø®Ø·Ø£ ÙÙŠ Ø±Ù‚Ù… Ø§Ù„Ù‡ÙˆÙŠØ© Ø£Ùˆ Ø±Ù‚Ù… Ø§Ù„Ù„ÙˆØ­Ø©. ÙŠØ±Ø¬Ù‰ Ø§Ù„ØªØ­Ù‚Ù‚ ÙˆØ¥Ø¹Ø§Ø¯Ø© Ø§Ù„Ù…Ø­Ø§ÙˆÙ„Ø©.";
             loginError.style.display = 'block';
         }
     });
 
     btnLogout.addEventListener('click', () => {
         currentDriver = null;
-        formLogin.reset();
-        secTripForm.classList.add('hidden');
-        secLogin.classList.remove('hidden');
+        companions = [];
+        formTrip.reset();
+        showSection('login');
     });
 
+
     // ==========================================
-    // COMPANIONS FORM LOGIC
+    // COMPANIONS DYNAMIC LIST LOGIC
     // ==========================================
 
     function renderCompanions() {
         companionsContainer.innerHTML = '';
         companions.forEach((comp, idx) => {
-            const row = document.createElement('div');
-            row.className = 'companion-row';
-            row.innerHTML = `
-                <div class="companion-index">${idx + 1}</div>
-                <div>
-                    <input type="text" placeholder="الاسم" value="${comp.name}" data-idx="${idx}" class="comp-name" required>
+            const div = document.createElement('div');
+            div.className = 'companion-rowCard';
+            div.innerHTML = 
+                <div class="companion-header">
+                    <h4>Ù…Ø±Ø§ÙÙ‚ Ø±Ù‚Ù… \</h4>
+                    <button type="button" class="btn-remove-comp" data-idx="\">Ø¥Ø²Ø§Ù„Ø©</button>
                 </div>
-                <div>
-                    <input type="text" placeholder="رقم الهوية" value="${comp.id}" data-idx="${idx}" class="comp-id" required>
+                <div class="companion-grid">
+                    <div>
+                        <label>Ø§Ù„Ø§Ø³Ù… Ø§Ù„ÙƒØ§Ù…Ù„</label>
+                        <input type="text" class="comp-name" data-idx="\" value="\" placeholder="Ø£Ø¯Ø®Ù„ Ø§Ø³Ù… Ø§Ù„Ù…Ø±Ø§ÙÙ‚ Ø§Ù„Ø«Ù†Ø§Ø¦ÙŠ Ø£Ùˆ Ø§Ù„Ø«Ù„Ø§Ø«ÙŠ" required>
+                    </div>
+                    <div>
+                        <label>Ø±Ù‚Ù… Ø§Ù„Ù‡ÙˆÙŠØ© / Ø¬ÙˆØ§Ø² Ø§Ù„Ø³ÙØ±</label>
+                        <input type="text" class="comp-id" data-idx="\" value="\" placeholder="Ø£Ø¯Ø®Ù„ Ø±Ù‚Ù… Ø§Ù„Ù‡ÙˆÙŠØ© Ø£Ùˆ Ø§Ù„Ø¬ÙˆØ§Ø²" required>
+                    </div>
+                    <div>
+                        <label>Ø§Ù„Ø¬Ù†Ø³ÙŠØ©</label>
+                        <input type="text" class="comp-nationality" data-idx="\" value="\" placeholder="Ø£Ø¯Ø®Ù„ Ø§Ù„Ø¬Ù†Ø³ÙŠØ© (Ù…Ø«Ø§Ù„: Ù…ØµØ±ÙŠ)" required>
+                    </div>
                 </div>
-                <div>
-                    <input type="text" placeholder="الجنسية" value="${comp.nationality}" data-idx="${idx}" class="comp-nationality" required>
-                </div>
-                <div>
-                    <button type="button" class="btn btn-danger btn-remove-comp" data-idx="${idx}" style="padding: 6px 10px;">حذف</button>
-                </div>
-            `;
-            companionsContainer.appendChild(row);
+            \;
+            companionsContainer.appendChild(div);
         });
 
-        // Add Listeners to inputs
+        // Add event listeners back to dynamic elements
         document.querySelectorAll('.comp-name').forEach(input => {
             input.addEventListener('input', (e) => {
                 const idx = parseInt(e.target.getAttribute('data-idx'));
@@ -352,14 +374,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const year = now.getFullYear();
         const month = String(now.getMonth() + 1).padStart(2, '0');
         const day = String(now.getDate()).padStart(2, '0');
-        const dateString = `${year}-${month}-${day}`;
+        const dateString = ${year}--;
         
-        const days = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+        const days = ['Ø§Ù„Ø£Ø­Ø¯', 'Ø§Ù„Ø§Ø«Ù†ÙŠÙ†', 'Ø§Ù„Ø«Ù„Ø§Ø«Ø§Ø¡', 'Ø§Ù„Ø£Ø±Ø¨Ø¹Ø§Ø¡', 'Ø§Ù„Ø®Ù…ÙŠØ³', 'Ø§Ù„Ø¬Ù…Ø¹Ø©', 'Ø§Ù„Ø³Ø¨Øª'];
         const dayString = days[now.getDay()];
 
         // Handle optional Guest Name and phone
-        const gName = guestNameInput.value.trim() || "غير محدد";
-        const gPhone = guestPhoneInput.value.trim() || "غير محدد";
+        const gName = guestNameInput.value.trim() || "ØºÙŠØ± Ù…Ø­Ø¯Ø¯";
+        const gPhone = guestPhoneInput.value.trim() || "ØºÙŠØ± Ù…Ø­Ø¯Ø¯";
 
         alert("Checkpoint A: Form submit event fired");
         // Show upload indicator
@@ -374,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
         statusNotice.style.borderRadius = '8px';
         statusNotice.style.zIndex = '99999';
         statusNotice.style.fontWeight = 'bold';
-        statusNotice.textContent = "جاري إصدار كشف الركاب... يرجى الانتظار";
+        statusNotice.textContent = "Ø¬Ø§Ø±ÙŠ Ø¥ØµØ¯Ø§Ø± ÙƒØ´Ù Ø§Ù„Ø±ÙƒØ§Ø¨... ÙŠØ±Ø¬Ù‰ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø±";
         document.body.appendChild(statusNotice);
 
         try {
@@ -385,12 +407,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 flightNo,
                 dateString,
                 dayString,
-                driverName: currentDriver ? currentDriver.driverName : 'غير معروف',
-                nationalId: currentDriver ? currentDriver.nationalId : 'غير معروف',
-                mobile: currentDriver ? currentDriver.mobile : 'غير معروف',
-                carModel: currentDriver ? currentDriver.carModel : 'غير معروف',
-                carColor: currentDriver ? currentDriver.carColor : 'غير معروف',
-                plateNumber: currentDriver ? currentDriver.plateNumber : 'غير معروف',
+                driverName: currentDriver ? currentDriver.driverName : 'ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ',
+                nationalId: currentDriver ? currentDriver.nationalId : 'ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ',
+                mobile: currentDriver ? currentDriver.mobile : 'ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ',
+                carModel: currentDriver ? currentDriver.carModel : 'ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ',
+                carColor: currentDriver ? currentDriver.carColor : 'ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ',
+                plateNumber: currentDriver ? currentDriver.plateNumber : 'ØºÙŠØ± Ù…Ø¹Ø±ÙˆÙ',
                 source: tripSource.value,
                 destination: tripDestination.value,
                 guestName: gName,
@@ -405,10 +427,19 @@ document.addEventListener('DOMContentLoaded', () => {
             const draftPdf = pdfMake.createPdf(draftDoc);
             alert("Checkpoint D: PDF compile initiated, getting Blob");
 
-            draftPdf.getBlob((pdfBlob) => {
-                alert("Checkpoint E: getBlob callback entered successfully!");
+            draftPdf.getBase64((base64Data) => {
+                alert("Checkpoint E: getBase64 callback entered successfully!");
+                // Convert base64 back to blob for upload on main thread
+                const byteCharacters = atob(base64Data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const pdfBlob = new Blob([byteArray], { type: 'application/pdf' });
+
                 // Upload to Vercel Blob Storage via our API endpoint
-                fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
+                fetch(/api/upload?filename=booking-\.pdf, {
                     method: 'POST',
                     body: pdfBlob
                 })
@@ -426,14 +457,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     const finalPdf = pdfMake.createPdf(finalDoc);
 
                     // Download the final PDF with QR code
-                    finalPdf.download(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`, () => {
+                    finalPdf.download(Zowar-Taiba-Trip-Booking-\.pdf, () => {
                         statusNotice.remove();
-                        alert("تم إصدار كشف الركاب بنجاح! عند مسح رمز الـ QR سيفتح الملف مباشرة.");
+                        alert("ØªÙ… Ø¥ØµØ¯Ø§Ø± ÙƒØ´Ù Ø§Ù„Ø±ÙƒØ§Ø¨ Ø¨Ù†Ø¬Ø§Ø­! Ø¹Ù†Ø¯ Ù…Ø³Ø­ Ø±Ù…Ø² Ø§Ù„Ù€ QR Ø³ÙŠÙØªØ­ Ø§Ù„Ù…Ù„Ù Ù…Ø¨Ø§Ø´Ø±Ø©.");
                     });
 
                     // Also re-upload the final version with QR code (overwrite)
-                    finalPdf.getBlob((finalBlob) => {
-                        fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
+                    finalPdf.getBase64((finalBase64) => {
+                        const finalByteCharacters = atob(finalBase64);
+                        const finalByteNumbers = new Array(finalByteCharacters.length);
+                        for (let i = 0; i < finalByteCharacters.length; i++) {
+                            finalByteNumbers[i] = finalByteCharacters.charCodeAt(i);
+                        }
+                        const finalByteArray = new Uint8Array(finalByteNumbers);
+                        const finalBlob = new Blob([finalByteArray], { type: 'application/pdf' });
+
+                        fetch(/api/upload?filename=booking-\.pdf, {
                             method: 'POST',
                             body: finalBlob
                         }).catch(err => console.error('Re-upload error:', err));
@@ -441,23 +480,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 })
                 .catch(uploadErr => {
                     console.error("Cloud Upload Error:", uploadErr);
-                    alert("يتعذر الاتصال بالسحابة حالياً. تم حفظ كشف الركاب محلياً برمز QR احتياطي.");
+                    alert("ÙŠØªØ¹Ø°Ø± Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø³Ø­Ø§Ø¨Ø© Ø­Ø§Ù„ÙŠØ§Ù‹. ØªÙ… Ø­ÙØ¸ ÙƒØ´Ù Ø§Ù„Ø±ÙƒØ§Ø¨ Ù…Ø­Ù„ÙŠØ§Ù‹ Ø¨Ø±Ù…Ø² QR Ø§Ø­ØªÙŠØ§Ø·ÙŠ.");
                     
                     // Fallback: generate PDF with text-only QR code
-                    const fallbackQrData = `مؤسسة زوار طيبة للنقل البري - كشف ركاب رقم ${bookingId} - السائق: ${currentDriver.driverName}`;
+                    const fallbackQrData = Ù…Ø¤Ø³Ø³Ø© Ø²ÙˆØ§Ø± Ø·ÙŠØ¨Ø© Ù„Ù„Ù†Ù‚Ù„ Ø§Ù„Ø¨Ø±ÙŠ - ÙƒØ´Ù Ø±ÙƒØ§Ø¨ Ø±Ù‚Ù… \ - Ø§Ù„Ø³Ø§Ø¦Ù‚: \;
                     pdfData.qrUrl = fallbackQrData;
                     const fallbackDoc = buildPdfDocument(pdfData);
-                    pdfMake.createPdf(fallbackDoc).download(`Zowar-Taiba-Trip-Booking-${bookingId}.pdf`, () => {
+                    pdfMake.createPdf(fallbackDoc).download(Zowar-Taiba-Trip-Booking-\.pdf, () => {
                         statusNotice.remove();
                     });
                 });
-            }, (blobErr) => {
-                throw blobErr;
             });
         } catch (pdfErr) {
             statusNotice.remove();
             console.error("Fatal PDF Generation Error:", pdfErr);
-            alert("خطأ أثناء إنشاء كشف الركاب: " + pdfErr.message + "\nيرجى الانتظار 3 ثوانٍ حتى يكتمل تحميل الخطوط العربية ثم حاول مجدداً.");
+            alert("Ø®Ø·Ø£ Ø£Ø«Ù†Ø§Ø¡ Ø¥Ù†Ø´Ø§Ø¡ ÙƒØ´Ù Ø§Ù„Ø±ÙƒØ§Ø¨: " + pdfErr.message + "\nÙŠØ±Ø¬Ù‰ Ø§Ù„Ø§Ù†ØªØ¸Ø§Ø± 3 Ø«ÙˆØ§Ù†Ù Ø­ØªÙ‰ ÙŠÙƒØªÙ…Ù„ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ø®Ø·ÙˆØ· Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© Ø«Ù… Ø­Ø§ÙˆÙ„ Ù…Ø¬Ø¯Ø¯Ø§Ù‹.");
         }
     });
 

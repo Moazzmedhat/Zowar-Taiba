@@ -289,13 +289,13 @@ async function generateTripPdf(data) {
     drawSectionTitle(yPos, 'بيانات السائق');
     yPos += 9;
 
-    // Driver Details: render as manual grid rows
+    // Driver Details: render as manual grid rows (Value on Left, Label on Right)
     const driverRows = [
-        ['الجوال', `${data.mobile}`, 'الهويه', `${data.nationalId}`, 'السائق', `${data.driverName}`],
-        ['رقم اللوحه', `${data.plateNumber}`, 'اللون', `${data.carColor}`, 'السيارة', `${data.carModel}`]
+        [`${data.mobile}`, 'الجوال', `${data.nationalId}`, 'الهويه', `${data.driverName}`, 'السائق'],
+        [`${data.plateNumber}`, 'رقم اللوحه', `${data.carColor}`, 'اللون', `${data.carModel}`, 'السيارة']
     ];
-    const colW = [20, 43, 20, 43, 20, 44];
-    const colX = [10, 30, 73, 93, 136, 156];
+    const colW = [43, 20, 43, 20, 44, 20];
+    const colX = [10, 53, 73, 116, 136, 180];
     for (const row of driverRows) {
         let rowH = 8;
         // Draw border
@@ -305,7 +305,7 @@ async function generateTripPdf(data) {
         for (let c = 0; c < 6; c++) {
             doc.rect(colX[c], yPos, colW[c], rowH, 'S');
             // Odd cols = label (Arabic), even cols = value
-            addArabicText(doc, row[c], colX[c] + colW[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 0 ? 'bold' : 'normal', align: 'right' });
+            addArabicText(doc, row[c], colX[c] + colW[c] - 1, yPos + 6, { fontSize: 8.5, color: '#000000', fontStyle: c % 2 === 1 ? 'bold' : 'normal', align: 'right' });
         }
         yPos += rowH;
     }

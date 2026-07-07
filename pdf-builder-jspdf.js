@@ -487,10 +487,10 @@ async function generateTripPdf(data) {
         addArabicText(doc, title, 200, y + 4, { fontSize: 9, color: '#000000', fontStyle: 'bold', align: 'right' });
         y += 7;
         
-        // Header row
-        const iCols = [90, 25, 25, 50]; // widths
-        const iX    = [10, 100, 125, 150];
-        const iHdrs = ['البند', 'سليم', 'غير سليم', 'ملاحظات'];
+        // Header row (RTL flow: Notes, Not Salim, Salim, Item)
+        const iCols = [50, 25, 25, 90]; // widths
+        const iX    = [10, 60, 85, 110];
+        const iHdrs = ['ملاحظات', 'غير سليم', 'سليم', 'البند'];
         doc.setFillColor(235, 235, 235);
         for (let c = 0; c < 4; c++) {
             doc.rect(iX[c], y, iCols[c], 6, 'F');
@@ -504,11 +504,13 @@ async function generateTripPdf(data) {
             for (let c = 0; c < 4; c++) {
                 doc.rect(iX[c], y, iCols[c], 6, 'S');
             }
-            addArabicText(doc, item, iX[0] + iCols[0] - 1, y + 4.5, { fontSize: 7.5, color: '#000000', align: 'right' });
-            // Checkmark in 'Salim' column
+            // Draw item name in 'البند' column (index 3)
+            addArabicText(doc, item, iX[3] + iCols[3] - 1, y + 4.5, { fontSize: 7.5, color: '#000000', align: 'right' });
+            
+            // Checkmark in 'سليم' column (index 2)
             doc.setTextColor(0, 150, 136);
             doc.setFontSize(8);
-            doc.text('✓', iX[1] + iCols[1] / 2, y + 4, { align: 'center' });
+            doc.text('✓', iX[2] + iCols[2] / 2, y + 4, { align: 'center' });
             doc.setTextColor(0, 0, 0);
             y += 6;
         }

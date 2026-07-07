@@ -18,39 +18,39 @@
             alert("Unhandled Promise Rejection:\n" + event.reason);
         });
 
-        // Load and register Cairo Arabic font for pdfmake-rtl
+        // Load and register Cairo Arabic font for pdfmake-rtl locally
         (async function() {
             try {
-                const cairoModule = await import('https://unpkg.com/pdfmake-rtl/fonts/Cairo.js');
-                if (cairoModule.default) pdfMake.addFonts(cairoModule.default);
-                else if (cairoModule.Cairo) pdfMake.addFonts(cairoModule);
-            } catch(e) {
-                console.warn('Cairo font dynamic import failed, trying fetch...', e);
-                // Fallback: fetch Cairo TTF files and register manually
-                try {
-                    const [regular, bold] = await Promise.all([
-                        fetch('fonts/Cairo/Cairo-Regular.ttf').then(r => r.arrayBuffer()),
-                        fetch('fonts/Cairo/Cairo-Bold.ttf').then(r => r.arrayBuffer())
-                    ]);
-                    function bufToBase64(buf) {
-                        let binary = '';
-                        const bytes = new Uint8Array(buf);
-                        for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
-                        return btoa(binary);
-                    }
-                    pdfMake.vfs['Cairo-Regular.ttf'] = bufToBase64(regular);
-                    pdfMake.vfs['Cairo-Bold.ttf'] = bufToBase64(bold);
-                    pdfMake.fonts = pdfMake.fonts || {};
-                    pdfMake.fonts['Cairo'] = {
-                        normal: 'Cairo-Regular.ttf',
-                        bold: 'Cairo-Bold.ttf',
-                        italics: 'Cairo-Regular.ttf',
-                        bolditalics: 'Cairo-Bold.ttf'
-                    };
-                    console.log('Cairo font loaded via fetch fallback');
-                } catch(e2) {
-                    console.error('Failed to load Cairo font:', e2);
+                const [regular, bold] = await Promise.all([
+                    fetch('fonts/Cairo/Cairo-Regular.ttf').then(r => {
+                        if (!r.ok) throw new Error("Cairo-Regular fetch status " + r.status);
+                        return r.arrayBuffer();
+                    }),
+                    fetch('fonts/Cairo/Cairo-Bold.ttf').then(r => {
+                        if (!r.ok) throw new Error("Cairo-Bold fetch status " + r.status);
+                        return r.arrayBuffer();
+                    })
+                ]);
+                function bufToBase64(buf) {
+                    let binary = '';
+                    const bytes = new Uint8Array(buf);
+                    for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]);
+                    return btoa(binary);
                 }
+                pdfMake.vfs = pdfMake.vfs || {};
+                pdfMake.vfs['Cairo-Regular.ttf'] = bufToBase64(regular);
+                pdfMake.vfs['Cairo-Bold.ttf'] = bufToBase64(bold);
+                pdfMake.fonts = pdfMake.fonts || {};
+                pdfMake.fonts['Cairo'] = {
+                    normal: 'Cairo-Regular.ttf',
+                    bold: 'Cairo-Bold.ttf',
+                    italics: 'Cairo-Regular.ttf',
+                    bolditalics: 'Cairo-Bold.ttf'
+                };
+                console.log('Cairo font loaded locally');
+            } catch(e) {
+                alert("Font Load Error: " + e.message);
+                console.error('Failed to load Cairo font:', e);
             }
         })();
     </script>

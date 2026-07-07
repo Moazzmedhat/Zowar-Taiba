@@ -21,7 +21,18 @@ let arabicCanvasFont = 'Cairo, Arial, sans-serif';
  * @param {string} fontWeight - 'normal' or 'bold'
  * @returns {{ dataUrl: string, widthPx: number, heightPx: number }}
  */
-function renderArabicToCanvas(text, fontSize, color, fontWeight) {
+/**
+ * Render Arabic text to a canvas and return as base64 PNG/JPEG data URL.
+ * The browser handles all Arabic shaping (connecting letters) and RTL direction natively.
+ * 
+ * @param {string} text - The Arabic text to render
+ * @param {number} fontSize - Font size in pixels
+ * @param {string} color - CSS color string (e.g. '#000000')
+ * @param {string} fontWeight - 'normal' or 'bold'
+ * @param {boolean} transparent - Force transparent PNG format
+ * @returns {{ dataUrl: string, format: string, widthPx: number, heightPx: number }}
+ */
+function renderArabicToCanvas(text, fontSize, color, fontWeight, transparent) {
     if (!text) return null;
     try {
         const scale = 4; // High-resolution retina scale for maximum sharpness
@@ -44,8 +55,9 @@ function renderArabicToCanvas(text, fontSize, color, fontWeight) {
         if (!ctx) return null;
         
         const isWhiteText = (color && (color.toLowerCase() === '#ffffff' || color.toLowerCase() === '#fff' || color.toLowerCase() === 'white'));
+        const usePng = transparent || isWhiteText;
         
-        if (!isWhiteText) {
+        if (!usePng) {
             // Fill canvas with white background for black text to allow high JPEG compression
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, textWidthPx, textHeightPx);
@@ -59,9 +71,9 @@ function renderArabicToCanvas(text, fontSize, color, fontWeight) {
         ctx.fillText(text, textWidthPx - 5, textHeightPx / 2);
         
         return {
-            // Use transparent PNG for white text (drawn on teal headers), JPEG for normal black text to keep file size tiny
-            dataUrl: isWhiteText ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.85),
-            format: isWhiteText ? 'PNG' : 'JPEG',
+            // Use transparent PNG when requested, JPEG for normal black text to keep file size tiny
+            dataUrl: usePng ? canvas.toDataURL('image/png') : canvas.toDataURL('image/jpeg', 0.85),
+            format: usePng ? 'PNG' : 'JPEG',
             widthPx: textWidthPx,
             heightPx: textHeightPx
         };
@@ -79,7 +91,7 @@ function renderArabicToCanvas(text, fontSize, color, fontWeight) {
  * @param {string} text - Arabic text string
  * @param {number} xMm - X position in mm (right edge for RTL, or use align)
  * @param {number} yMm - Y position in mm (baseline)
- * @param {object} options - { fontSize, color, fontStyle, align, maxWidthMm }
+ * @param {object} options - { fontSize, color, fontStyle, align, transparent }
  * @returns {number} - width of rendered image in mm
  */
 function addArabicText(doc, text, xMm, yMm, options = {}) {
@@ -98,8 +110,9 @@ function addArabicText(doc, text, xMm, yMm, options = {}) {
         const color = options.color || '#000000';
         const fontWeight = (options.fontStyle === 'bold') ? 'bold' : 'normal';
         const align = options.align || 'right';
+        const transparent = options.transparent || false;
         
-        const rendered = renderArabicToCanvas(str, fontSize * 1.5, color, fontWeight);
+        const rendered = renderArabicToCanvas(str, fontSize * 1.5, color, fontWeight, transparent);
         if (!rendered) {
             // Fallback to basic text if canvas fails
             doc.text(str, xMm, yMm, { align: align });
@@ -495,7 +508,7 @@ async function generateTripPdf(data) {
         for (let c = 0; c < 4; c++) {
             doc.rect(iX[c], y, iCols[c], 6, 'F');
             doc.rect(iX[c], y, iCols[c], 6, 'S');
-            addArabicText(doc, iHdrs[c], iX[c] + iCols[c] - 1, y + 4.5, { fontSize: 7.5, color: '#000000', fontStyle: 'bold', align: 'right' });
+            addArabicText(doc, iHdrs[c], iX[c] + iCols[c] - 1, y + 4.5, { fontSize: 7.5, color: '#000000', fontStyle: 'bold', align: 'right', transparent: true });
         }
         y += 6;
         
@@ -504,14 +517,12 @@ async function generateTripPdf(data) {
             for (let c = 0; c < 4; c++) {
                 doc.rect(iX[c], y, iCols[c], 6, 'S');
             }
-            // Draw item name in 'البند' column (index 3)
-            addArabicText(doc, item, iX[3] + iCols[3] - 1, y + 4.5, { fontSize: 7.5, color: '#000000', align: 'right' });
+            // Draw item name in 'البند' column (index 3) - set transparent: true to prevent white box overlapping grid borders
+            addArabicText(doc, item, iX[3] + iCols[3] - 1, y + 4.5, { fontSize: 7.5, color: '#000000', align: 'right', transparent: true });
             
-            // Checkmark in 'سليم' column (index 2)
-            doc.setTextColor(0, 150, 136);
-            doc.setFontSize(8);
-            doc.text('✓', iX[2] + iCols[2] / 2, y + 4, { align: 'center' });
-            doc.setTextColor(0, 0, 0);
+            // Draw a beautiful checkmark '✓' using Canvas (index 2)
+            addArabicText(doc, '✓', iX[2] + iCols[2] / 2, y + 4.5, { fontSize: 9, color: '#009688', fontStyle: 'bold', align: 'center', transparent: true });
+            
             y += 6;
         }
         return y;

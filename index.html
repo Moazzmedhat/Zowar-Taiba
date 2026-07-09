@@ -128,57 +128,42 @@
             <!-- SECTION 3: ADMIN CRUD PANEL -->
             <section id="sec-admin" class="card hidden">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                    <h2>لوحة التحكم بالمديرين</h2>
-                    <button class="btn btn-secondary" id="btn-download-json">تصدير البيانات المحدثة (JSON)</button>
+                    <h2>لوحة التحكم</h2>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-secondary" id="btn-download-drivers-json">تصدير السائقين (JSON)</button>
+                        <button class="btn btn-secondary" id="btn-download-cars-json">تصدير السيارات (JSON)</button>
+                    </div>
                 </div>
 
-                <!-- Admin Add/Edit Form -->
-                <div id="admin-form-container" style="background-color: #f7fafc; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 30px;">
-                    <h3 id="admin-form-title" style="margin-bottom: 15px; color: var(--primary);">إضافة سائق وسيارة جديدة</h3>
-                    <form id="form-crud">
-                        <input type="hidden" id="crud-index" value="">
+                <!-- ======== DRIVERS MANAGEMENT ======== -->
+                <div style="background-color: #f0faf9; padding: 20px; border-radius: 8px; border: 1px solid var(--primary); margin-bottom: 30px;">
+                    <h3 id="driver-form-title" style="margin-bottom: 15px; color: var(--primary);">إضافة سائق جديد</h3>
+                    <form id="form-crud-driver">
+                        <input type="hidden" id="crud-driver-index" value="">
                         <div class="grid-2">
                             <div class="form-group">
-                                <label for="crud-id">الهوية الوطنية / الإقامة</label>
-                                <input type="text" id="crud-id" required>
+                                <label for="crud-driver-id">الهوية الوطنية / الإقامة</label>
+                                <input type="text" id="crud-driver-id" required>
                             </div>
                             <div class="form-group">
-                                <label>رقم اللوحة</label>
-                                <div style="display:flex; gap:8px;">
-                                    <input type="text" id="crud-plate-letters" placeholder="حروف (مثال: أ ب ج)" required style="flex:1;">
-                                    <input type="text" id="crud-plate-numbers" placeholder="أرقام (مثال: 1234)" required style="flex:1;">
-                                </div>
+                                <label for="crud-driver-name">اسم السائق</label>
+                                <input type="text" id="crud-driver-name" required>
                             </div>
                         </div>
                         <div class="grid-2">
                             <div class="form-group">
-                                <label for="crud-name">اسم السائق</label>
-                                <input type="text" id="crud-name" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="crud-mobile">الجوال</label>
-                                <input type="text" id="crud-mobile" required>
-                            </div>
-                        </div>
-                        <div class="grid-2">
-                            <div class="form-group">
-                                <label for="crud-model">موديل السيارة</label>
-                                <input type="text" id="crud-model" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="crud-color">لون السيارة</label>
-                                <input type="text" id="crud-color" required>
+                                <label for="crud-driver-mobile">الجوال</label>
+                                <input type="text" id="crud-driver-mobile" required>
                             </div>
                         </div>
                         <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button type="submit" id="btn-save-crud" class="btn btn-primary">حفظ البيانات</button>
-                            <button type="button" id="btn-cancel-crud" class="btn btn-secondary">إلغاء</button>
+                            <button type="submit" class="btn btn-primary">حفظ السائق</button>
+                            <button type="button" id="btn-cancel-driver" class="btn btn-secondary">إلغاء</button>
                         </div>
                     </form>
                 </div>
 
-                <!-- Drivers Table -->
-                <h3 style="color: var(--secondary);">قائمة السائقين والسيارات المسجلة</h3>
+                <h3 style="color: var(--secondary);">قائمة السائقين المسجلين</h3>
                 <div class="admin-table-container">
                     <table class="admin-table">
                         <thead>
@@ -186,14 +171,59 @@
                                 <th>اسم السائق</th>
                                 <th>الهوية</th>
                                 <th>الجوال</th>
-                                <th>السيارة</th>
+                                <th>العمليات</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drivers-table-body">
+                        </tbody>
+                    </table>
+                </div>
+
+                <hr style="margin: 30px 0; border-color: var(--border-color);">
+
+                <!-- ======== CARS MANAGEMENT ======== -->
+                <div style="background-color: #f7fafc; padding: 20px; border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 30px;">
+                    <h3 id="car-form-title" style="margin-bottom: 15px; color: var(--primary);">إضافة سيارة جديدة</h3>
+                    <form id="form-crud-car">
+                        <input type="hidden" id="crud-car-index" value="">
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label>رقم اللوحة</label>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" id="crud-car-plate-letters" placeholder="حروف (مثال: أ ب ج)" required style="flex:1;">
+                                    <input type="text" id="crud-car-plate-numbers" placeholder="أرقام (مثال: 1234)" required style="flex:1;">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="crud-car-model">موديل السيارة</label>
+                                <input type="text" id="crud-car-model" required>
+                            </div>
+                        </div>
+                        <div class="grid-2">
+                            <div class="form-group">
+                                <label for="crud-car-color">لون السيارة</label>
+                                <input type="text" id="crud-car-color" required>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 10px; margin-top: 10px;">
+                            <button type="submit" class="btn btn-primary">حفظ السيارة</button>
+                            <button type="button" id="btn-cancel-car" class="btn btn-secondary">إلغاء</button>
+                        </div>
+                    </form>
+                </div>
+
+                <h3 style="color: var(--secondary);">قائمة السيارات المسجلة</h3>
+                <div class="admin-table-container">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
                                 <th>رقم اللوحة</th>
+                                <th>الموديل</th>
                                 <th>اللون</th>
                                 <th>العمليات</th>
                             </tr>
                         </thead>
-                        <tbody id="admin-table-body">
-                            <!-- Drivers list injected here -->
+                        <tbody id="cars-table-body">
                         </tbody>
                     </table>
                 </div>

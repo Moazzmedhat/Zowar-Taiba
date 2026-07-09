@@ -1,7 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
     // State variables
     let drivers = [];
+    let cars = [];
     let currentDriver = null;
+    let currentCar = null;
     let companions = [];
     const MAX_COMPANIONS = 12;
 
@@ -180,8 +182,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     applyPlateLettersFormat('login-plate-letters');
     applyPlateNumbersFormat('login-plate-numbers');
-    applyPlateLettersFormat('crud-plate-letters');
-    applyPlateNumbersFormat('crud-plate-numbers');
+    applyPlateLettersFormat('crud-car-plate-letters');
+    applyPlateNumbersFormat('crud-car-plate-numbers');
 
     // ==========================================
     // NATIONAL ID VALIDATION (digits only, max 10)
@@ -195,154 +197,268 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     applyNationalIdValidation('login-id');
-    applyNationalIdValidation('crud-id');
+    applyNationalIdValidation('crud-driver-id');
 
-    // DOM Elements - CRUD Admin inputs
-    const crudIndex = document.getElementById('crud-index');
-    const crudId = document.getElementById('crud-id');
-    const crudPlateLetters = document.getElementById('crud-plate-letters');
-    const crudPlateNumbers = document.getElementById('crud-plate-numbers');
-    const crudName = document.getElementById('crud-name');
-    const crudMobile = document.getElementById('crud-mobile');
-    const crudModel = document.getElementById('crud-model');
-    const crudColor = document.getElementById('crud-color');
-    const adminTableBody = document.getElementById('admin-table-body');
-    const adminFormTitle = document.getElementById('admin-form-title');
-    const btnCancelCrud = document.getElementById('btn-cancel-crud');
-    const btnDownloadJson = document.getElementById('btn-download-json');
+    // DOM Elements - Driver CRUD
+    const formCrudDriver = document.getElementById('form-crud-driver');
+    const crudDriverIndex = document.getElementById('crud-driver-index');
+    const crudDriverId = document.getElementById('crud-driver-id');
+    const crudDriverName = document.getElementById('crud-driver-name');
+    const crudDriverMobile = document.getElementById('crud-driver-mobile');
+    const driversTableBody = document.getElementById('drivers-table-body');
+    const driverFormTitle = document.getElementById('driver-form-title');
+    const btnCancelDriver = document.getElementById('btn-cancel-driver');
 
-    // PDF Elements for replacement
-    const pdfTemplate = document.getElementById('pdf-template-wrapper');
+    // DOM Elements - Car CRUD
+    const formCrudCar = document.getElementById('form-crud-car');
+    const crudCarIndex = document.getElementById('crud-car-index');
+    const crudCarPlateLetters = document.getElementById('crud-car-plate-letters');
+    const crudCarPlateNumbers = document.getElementById('crud-car-plate-numbers');
+    const crudCarModel = document.getElementById('crud-car-model');
+    const crudCarColor = document.getElementById('crud-car-color');
+    const carsTableBody = document.getElementById('cars-table-body');
+    const carFormTitle = document.getElementById('car-form-title');
+    const btnCancelCar = document.getElementById('btn-cancel-car');
+
+    const btnDownloadDriversJson = document.getElementById('btn-download-drivers-json');
+    const btnDownloadCarsJson = document.getElementById('btn-download-cars-json');
 
     // ==========================================
     // DATA INITIALIZATION & CRUD
     // ==========================================
 
     async function initData() {
-        const storedDrivers = localStorage.getItem('bst_drivers');
+        // Check for old combined format and migrate
+        const oldData = localStorage.getItem('bst_drivers');
+        if (oldData) {
+            const parsed = JSON.parse(oldData);
+            if (parsed.length > 0 && parsed[0].carModel !== undefined) {
+                // Old combined format detected — migrate
+                const migratedDrivers = parsed.map(d => ({
+                    nationalId: d.nationalId,
+                    driverName: d.driverName,
+                    mobile: d.mobile
+                }));
+                const migratedCars = parsed.map(d => ({
+                    plateNumber: d.plateNumber,
+                    carModel: d.carModel,
+                    carColor: d.carColor
+                }));
+                // Deduplicate cars by plateNumber
+                const uniqueCars = [];
+                const seenPlates = new Set();
+                migratedCars.forEach(c => {
+                    const key = c.plateNumber.replace(/\s+/g, '');
+                    if (!seenPlates.has(key)) {
+                        seenPlates.add(key);
+                        uniqueCars.push(c);
+                    }
+                });
+                drivers = migratedDrivers;
+                cars = uniqueCars;
+                localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
+                localStorage.setItem('bst_cars', JSON.stringify(cars));
+                localStorage.removeItem('bst_drivers');
+                renderDriversTable();
+                renderCarsTable();
+                return;
+            }
+        }
+
+        // Load drivers
+        const storedDrivers = localStorage.getItem('bst_drivers_v2');
         if (storedDrivers) {
             drivers = JSON.parse(storedDrivers);
-            renderAdminTable();
         } else {
             try {
                 const response = await fetch('drivers.json');
                 drivers = await response.json();
-                localStorage.setItem('bst_drivers', JSON.stringify(drivers));
-                renderAdminTable();
+                localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
             } catch (err) {
                 console.error("Could not load default drivers.json", err);
                 drivers = [];
             }
         }
+
+        // Load cars
+        const storedCars = localStorage.getItem('bst_cars');
+        if (storedCars) {
+            cars = JSON.parse(storedCars);
+        } else {
+            try {
+                const response = await fetch('cars.json');
+                cars = await response.json();
+                localStorage.setItem('bst_cars', JSON.stringify(cars));
+            } catch (err) {
+                console.error("Could not load default cars.json", err);
+                cars = [];
+            }
+        }
+
+        renderDriversTable();
+        renderCarsTable();
     }
 
     initData();
 
-    function renderAdminTable() {
-        adminTableBody.innerHTML = '';
+    // ---- DRIVERS TABLE ----
+    function renderDriversTable() {
+        driversTableBody.innerHTML = '';
         drivers.forEach((driver, idx) => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td>${driver.driverName}</td>
                 <td>${driver.nationalId}</td>
                 <td>${driver.mobile}</td>
-                <td>${driver.carModel}</td>
-                <td>${driver.plateNumber}</td>
-                <td>${driver.carColor}</td>
                 <td class="actions-cell">
-                    <button class="btn btn-secondary btn-edit" data-index="${idx}" style="padding: 4px 8px; font-size: 0.8rem;">تعديل</button>
-                    <button class="btn btn-danger btn-delete" data-index="${idx}" style="padding: 4px 8px; font-size: 0.8rem;">حذف</button>
+                    <button class="btn btn-secondary btn-edit-driver" data-index="${idx}" style="padding: 4px 8px; font-size: 0.8rem;">تعديل</button>
+                    <button class="btn btn-danger btn-delete-driver" data-index="${idx}" style="padding: 4px 8px; font-size: 0.8rem;">حذف</button>
                 </td>
             `;
-            adminTableBody.appendChild(tr);
+            driversTableBody.appendChild(tr);
         });
 
-        // Add event listeners to CRUD actions
-        document.querySelectorAll('.btn-edit').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const idx = e.target.getAttribute('data-index');
-                editDriver(idx);
-            });
+        document.querySelectorAll('.btn-edit-driver').forEach(btn => {
+            btn.addEventListener('click', (e) => editDriver(e.target.getAttribute('data-index')));
         });
-
-        document.querySelectorAll('.btn-delete').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const idx = e.target.getAttribute('data-index');
-                deleteDriver(idx);
-            });
+        document.querySelectorAll('.btn-delete-driver').forEach(btn => {
+            btn.addEventListener('click', (e) => deleteDriver(e.target.getAttribute('data-index')));
         });
     }
 
-    // Save or update Driver CRUD
-    formCrud.addEventListener('submit', (e) => {
+    formCrudDriver.addEventListener('submit', (e) => {
         e.preventDefault();
-        const index = crudIndex.value;
+        const index = crudDriverIndex.value;
         const driverData = {
-            nationalId: crudId.value.trim(),
-            plateNumber: (crudPlateLetters.value.trim() + ' ' + crudPlateNumbers.value.trim()).trim(),
-            driverName: crudName.value.trim(),
-            mobile: crudMobile.value.trim(),
-            carModel: crudModel.value.trim(),
-            carColor: crudColor.value.trim()
+            nationalId: crudDriverId.value.trim(),
+            driverName: crudDriverName.value.trim(),
+            mobile: crudDriverMobile.value.trim()
         };
 
         if (index === '') {
-            // Create
             drivers.push(driverData);
         } else {
-            // Update
             drivers[parseInt(index)] = driverData;
         }
 
-        localStorage.setItem('bst_drivers', JSON.stringify(drivers));
-        renderAdminTable();
-        resetCrudForm();
+        localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
+        renderDriversTable();
+        resetDriverForm();
     });
 
     function editDriver(idx) {
         const d = drivers[idx];
-        crudIndex.value = idx;
-        crudId.value = d.nationalId;
-        // Split existing plateNumber back into letters and numbers for editing
-        const plateMatch = d.plateNumber ? d.plateNumber.match(/^([^0-9٠-٩]*)(\s*[0-9٠-٩]+\s*)([^0-9٠-٩]*)$/) : null;
-        const plateNums = d.plateNumber ? (d.plateNumber.match(/[0-9\u0660-\u0669]+/) || [''])[0] : '';
-        const plateLets = d.plateNumber ? d.plateNumber.replace(plateNums, '').replace(/^\s+|\s+$/g, '') : '';
-        crudPlateLetters.value = plateLets;
-        crudPlateNumbers.value = plateNums;
-        crudName.value = d.driverName;
-        crudMobile.value = d.mobile;
-        crudModel.value = d.carModel;
-        crudColor.value = d.carColor;
-        adminFormTitle.textContent = "تعديل بيانات السائق والسيارة";
+        crudDriverIndex.value = idx;
+        crudDriverId.value = d.nationalId;
+        crudDriverName.value = d.driverName;
+        crudDriverMobile.value = d.mobile;
+        driverFormTitle.textContent = "تعديل بيانات السائق";
     }
 
     function deleteDriver(idx) {
         if (confirm("هل أنت متأكد من حذف هذا السائق؟")) {
             drivers.splice(idx, 1);
-            localStorage.setItem('bst_drivers', JSON.stringify(drivers));
-            renderAdminTable();
-            resetCrudForm();
+            localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
+            renderDriversTable();
+            resetDriverForm();
         }
     }
 
-    function resetCrudForm() {
-        formCrud.reset();
-        crudIndex.value = '';
-        adminFormTitle.textContent = "إضافة سائق وسيارة جديدة";
+    function resetDriverForm() {
+        formCrudDriver.reset();
+        crudDriverIndex.value = '';
+        driverFormTitle.textContent = "إضافة سائق جديد";
     }
 
-    btnCancelCrud.addEventListener('click', resetCrudForm);
+    btnCancelDriver.addEventListener('click', resetDriverForm);
 
-    // Download updated JSON file
-    btnDownloadJson.addEventListener('click', () => {
-        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(drivers, null, 2));
+    // ---- CARS TABLE ----
+    function renderCarsTable() {
+        carsTableBody.innerHTML = '';
+        cars.forEach((car, idx) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${car.plateNumber}</td>
+                <td>${car.carModel}</td>
+                <td>${car.carColor}</td>
+                <td class="actions-cell">
+                    <button class="btn btn-secondary btn-edit-car" data-index="${idx}" style="padding: 4px 8px; font-size: 0.8rem;">تعديل</button>
+                    <button class="btn btn-danger btn-delete-car" data-index="${idx}" style="padding: 4px 8px; font-size: 0.8rem;">حذف</button>
+                </td>
+            `;
+            carsTableBody.appendChild(tr);
+        });
+
+        document.querySelectorAll('.btn-edit-car').forEach(btn => {
+            btn.addEventListener('click', (e) => editCar(e.target.getAttribute('data-index')));
+        });
+        document.querySelectorAll('.btn-delete-car').forEach(btn => {
+            btn.addEventListener('click', (e) => deleteCar(e.target.getAttribute('data-index')));
+        });
+    }
+
+    formCrudCar.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const index = crudCarIndex.value;
+        const carData = {
+            plateNumber: (crudCarPlateLetters.value.trim() + ' ' + crudCarPlateNumbers.value.trim()).trim(),
+            carModel: crudCarModel.value.trim(),
+            carColor: crudCarColor.value.trim()
+        };
+
+        if (index === '') {
+            cars.push(carData);
+        } else {
+            cars[parseInt(index)] = carData;
+        }
+
+        localStorage.setItem('bst_cars', JSON.stringify(cars));
+        renderCarsTable();
+        resetCarForm();
+    });
+
+    function editCar(idx) {
+        const c = cars[idx];
+        crudCarIndex.value = idx;
+        const plateNums = c.plateNumber ? (c.plateNumber.match(/[0-9\u0660-\u0669]+/) || [''])[0] : '';
+        const plateLets = c.plateNumber ? c.plateNumber.replace(plateNums, '').replace(/^\s+|\s+$/g, '') : '';
+        crudCarPlateLetters.value = plateLets;
+        crudCarPlateNumbers.value = plateNums;
+        crudCarModel.value = c.carModel;
+        crudCarColor.value = c.carColor;
+        carFormTitle.textContent = "تعديل بيانات السيارة";
+    }
+
+    function deleteCar(idx) {
+        if (confirm("هل أنت متأكد من حذف هذه السيارة؟")) {
+            cars.splice(idx, 1);
+            localStorage.setItem('bst_cars', JSON.stringify(cars));
+            renderCarsTable();
+            resetCarForm();
+        }
+    }
+
+    function resetCarForm() {
+        formCrudCar.reset();
+        crudCarIndex.value = '';
+        carFormTitle.textContent = "إضافة سيارة جديدة";
+    }
+
+    btnCancelCar.addEventListener('click', resetCarForm);
+
+    // ---- DOWNLOAD JSON ----
+    function downloadJson(data, filename) {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(data, null, 2));
         const downloadAnchor = document.createElement('a');
         downloadAnchor.setAttribute("href", dataStr);
-        downloadAnchor.setAttribute("download", "drivers.json");
+        downloadAnchor.setAttribute("download", filename);
         document.body.appendChild(downloadAnchor);
         downloadAnchor.click();
         downloadAnchor.remove();
-    });
+    }
+
+    btnDownloadDriversJson.addEventListener('click', () => downloadJson(drivers, 'drivers.json'));
+    btnDownloadCarsJson.addEventListener('click', () => downloadJson(cars, 'cars.json'));
 
     // ==========================================
     // ROUTING & VIEW CONTROLS
@@ -389,19 +505,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const nationalId = inputLoginId.value.trim();
         const plateNumber = (inputLoginPlateLetters.value.trim() + ' ' + inputLoginPlateNumbers.value.trim()).trim();
 
-        // Find driver matching ID and Plate
-        const driver = drivers.find(d => 
-            d.nationalId === nationalId && 
-            d.plateNumber.replace(/\s+/g, '') === plateNumber.replace(/\s+/g, '')
+        // 1. Find driver by national ID
+        const driver = drivers.find(d => d.nationalId === nationalId);
+
+        // 2. Find car matching plate number
+        const car = cars.find(c => 
+            c.plateNumber.replace(/\s+/g, '') === plateNumber.replace(/\s+/g, '')
         );
 
-        if (driver) {
+        if (driver && car) {
             currentDriver = driver;
+            currentCar = car;
             loginError.style.display = 'none';
-            // Show badge
+            // Show badge info
             badgeName.textContent = driver.driverName;
-            badgeCar.textContent = `${driver.carModel} (${driver.carColor})`;
-            badgePlate.textContent = driver.plateNumber;
+            badgeCar.textContent = `${car.carModel} (${car.carColor})`;
+            badgePlate.textContent = car.plateNumber;
             // Transition view
             secLogin.classList.add('hidden');
             secTripForm.classList.remove('hidden');
@@ -415,6 +534,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     btnLogout.addEventListener('click', () => {
         currentDriver = null;
+        currentCar = null;
         formLogin.reset();
         secTripForm.classList.add('hidden');
         secLogin.classList.remove('hidden');
@@ -542,9 +662,9 @@ document.addEventListener('DOMContentLoaded', () => {
             driverName: currentDriver.driverName,
             nationalId: currentDriver.nationalId,
             mobile: currentDriver.mobile,
-            carModel: currentDriver.carModel,
-            carColor: currentDriver.carColor,
-            plateNumber: currentDriver.plateNumber,
+            carModel: currentCar.carModel,
+            carColor: currentCar.carColor,
+            plateNumber: currentCar.plateNumber,
             source: tripSource.value,
             destination: tripDestination.value,
             guestName: gName,
@@ -598,7 +718,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error("PDF generation failed:", err);
             
             // Fallback: Generate offline PDF with metadata-only QR code
-            const fallbackQrData = `مؤسسة زوار طيبة للنقل البري\nكشف ركاب رقم الحجز: ${bookingId}\nالسائق: ${currentDriver.driverName}\nالهوية: ${currentDriver.nationalId}\nرقم اللوحة: ${currentDriver.plateNumber}`;
+            const fallbackQrData = `مؤسسة زوار طيبة للنقل البري\nكشف ركاب رقم الحجز: ${bookingId}\nالسائق: ${currentDriver.driverName}\nالهوية: ${currentDriver.nationalId}\nرقم اللوحة: ${currentCar.plateNumber}`;
             const fallbackQrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(fallbackQrData)}`;
             const fallbackQrBase64 = await imageToBase64(fallbackQrUrl);
 

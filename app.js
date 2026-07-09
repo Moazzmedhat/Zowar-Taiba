@@ -485,7 +485,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const username = inputAdminUser.value.trim();
         const password = inputAdminPass.value.trim();
 
-        if (username === "admin" && password === "admin") {
+        if (username === "tolba" && password === "ZT-Tlb#9482_K!n") {
             adminLoginError.style.display = 'none';
             secAdmin.classList.remove('hidden');
             secAdminLogin.classList.add('hidden');

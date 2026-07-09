@@ -1,12 +1,37 @@
 [
   {
-    "plateNumber": "8258 U S A",
-    "carModel": "STARIA",
-    "carColor": "فضى"
+    "plateNumber": "ا ص م 4052",
+    "carModel": "تويوتا ميكروباص",
+    "carColor": "ابيض"
   },
   {
-    "plateNumber": "ا ط ل 1323",
-    "carModel": "هيونداى ستاريا",
-    "carColor": "فضى"
+    "plateNumber": "ا ص س 8122",
+    "carModel": "تويوتا HIACE",
+    "carColor": "ابيض"
+  },
+  {
+    "plateNumber": "ا ص س 8138",
+    "carModel": "تويوتا HIACE",
+    "carColor": "ابيض"
+  },
+  {
+    "plateNumber": "ا ص س 8148",
+    "carModel": "تويوتا HIACE",
+    "carColor": "ابيض"
+  },
+  {
+    "plateNumber": "ا ط ل 9425",
+    "carModel": "هيونداي STARIA",
+    "carColor": "اسود"
+  },
+  {
+    "plateNumber": "ا ط ا 7022",
+    "carModel": "هيونداي STARIA",
+    "carColor": "فضي"
+  },
+  {
+    "plateNumber": "ا س و 8258",
+    "carModel": "هيونداي STARIA",
+    "carColor": "ابيض"
   }
 ]

@@ -624,7 +624,7 @@ async function generateTripPdf(data) {
 
     // Official Stamp
     if (stampBase64) {
-        doc.addImage(stampBase64, 'PNG', 165, yPos - 12, 35, 35);
+        doc.addImage(stampBase64, 'PNG', 170, yPos - 3, 25, 25);
     }
 
     drawFooter('سجل فحص يومي للسيارة تم إصداره إلكترونيا من السيستم');

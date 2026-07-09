@@ -619,12 +619,12 @@ async function generateTripPdf(data) {
     addArabicText(doc, 'أقر أنا السائق أعلاه بأنني قمت بفحص الحافلة والتأكد من سلامتها وجاهزيتها قبل التشغيل.', 199, yPos + 13, { fontSize: 8, color: '#000000', align: 'right' });
     yPos += 24;
 
-    // Signature
-    addArabicText(doc, `اسم السائق - ${data.driverName}`, 15, yPos + 6, { fontSize: 9, color: '#000000', align: 'left' });
+    // Signature (right side)
+    addArabicText(doc, `اسم السائق - ${data.driverName}`, 199, yPos + 6, { fontSize: 9, color: '#000000', align: 'right' });
 
-    // Official Stamp
+    // Official Stamp (left side)
     if (stampBase64) {
-        doc.addImage(stampBase64, 'PNG', 170, yPos - 3, 25, 25);
+        doc.addImage(stampBase64, 'PNG', 10, yPos - 3, 25, 25);
     }
 
     drawFooter('سجل فحص يومي للسيارة تم إصداره إلكترونيا من السيستم');

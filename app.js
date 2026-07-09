@@ -265,34 +265,53 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        // Load drivers
+        // Load drivers (fetch with cache-buster and merge with localStorage)
+        let fileDrivers = [];
+        try {
+            const response = await fetch('drivers.json?v=' + Date.now());
+            fileDrivers = await response.json();
+        } catch (err) {
+            console.error("Could not load drivers.json", err);
+        }
+
         const storedDrivers = localStorage.getItem('bst_drivers_v2');
         if (storedDrivers) {
             drivers = JSON.parse(storedDrivers);
+            // Merge any new drivers from drivers.json
+            fileDrivers.forEach(fd => {
+                if (!drivers.some(d => d.nationalId === fd.nationalId)) {
+                    drivers.push(fd);
+                }
+            });
+            localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
         } else {
-            try {
-                const response = await fetch('drivers.json');
-                drivers = await response.json();
-                localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
-            } catch (err) {
-                console.error("Could not load default drivers.json", err);
-                drivers = [];
-            }
+            drivers = fileDrivers;
+            localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
         }
 
-        // Load cars
+        // Load cars (fetch with cache-buster and merge with localStorage)
+        let fileCars = [];
+        try {
+            const response = await fetch('cars.json?v=' + Date.now());
+            fileCars = await response.json();
+        } catch (err) {
+            console.error("Could not load cars.json", err);
+        }
+
         const storedCars = localStorage.getItem('bst_cars');
         if (storedCars) {
             cars = JSON.parse(storedCars);
+            // Merge any new cars from cars.json (compare plates without spaces)
+            fileCars.forEach(fc => {
+                const keyFc = fc.plateNumber.replace(/\s+/g, '');
+                if (!cars.some(c => c.plateNumber.replace(/\s+/g, '') === keyFc)) {
+                    cars.push(fc);
+                }
+            });
+            localStorage.setItem('bst_cars', JSON.stringify(cars));
         } else {
-            try {
-                const response = await fetch('cars.json');
-                cars = await response.json();
-                localStorage.setItem('bst_cars', JSON.stringify(cars));
-            } catch (err) {
-                console.error("Could not load default cars.json", err);
-                cars = [];
-            }
+            cars = fileCars;
+            localStorage.setItem('bst_cars', JSON.stringify(cars));
         }
 
         renderDriversTable();

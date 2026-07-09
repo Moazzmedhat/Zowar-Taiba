@@ -472,7 +472,7 @@ async function generateTripPdf(data) {
 
     // Official Stamp
     if (stampBase64) {
-        doc.addImage(stampBase64, 'PNG', 10, yPos - 6, 26, 26);
+        doc.addImage(stampBase64, 'PNG', 10, yPos - 10, 35, 35);
     }
 
     drawFooter('امر تشغيل شامل كشف الركاب تم إصداره إلكترونيا من السيستم');
@@ -528,6 +528,11 @@ async function generateTripPdf(data) {
     addArabicText(doc, 'في حال الحجز وتم الالغاء قبل موعد الرحلة باكثر من 24 ساعة يتم استرداد المبلغ كامل.', 200, yPos, { fontSize: 11, color: '#000000', align: 'right' });
     yPos += 9;
     yPos = addArabicParagraph(doc, 'في حالة طلب الحجز من خلال الموقع الالكتروني يعتبر الحجز وموافقته على الشروط الاحكام موافقة على هذا العقد.', 200, yPos, { fontSize: 11, color: '#000000', align: 'right', maxWidthMm: 190, lineHeight: 8 });
+
+    // Official Stamp
+    if (stampBase64) {
+        doc.addImage(stampBase64, 'PNG', 10, yPos + 2, 35, 35);
+    }
 
     drawFooter('امر تشغيل شامل كشف الركاب تم إصداره إلكترونيا من السيستم');
 
@@ -615,7 +620,12 @@ async function generateTripPdf(data) {
     yPos += 24;
 
     // Signature
-    addArabicText(doc, `اسم السائق - ${data.driverName}`, 15, yPos, { fontSize: 9, color: '#000000', align: 'left' });
+    addArabicText(doc, `اسم السائق - ${data.driverName}`, 15, yPos + 6, { fontSize: 9, color: '#000000', align: 'left' });
+
+    // Official Stamp
+    if (stampBase64) {
+        doc.addImage(stampBase64, 'PNG', 165, yPos - 12, 35, 35);
+    }
 
     drawFooter('سجل فحص يومي للسيارة تم إصداره إلكترونيا من السيستم');
 

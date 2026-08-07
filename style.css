@@ -293,6 +293,21 @@ select:focus {
     text-align: center;
 }
 
+.city-dropdown-list li.city-other-option {
+    color: #b45309;
+    background: rgba(245, 158, 11, 0.07);
+    border-top: 1px dashed rgba(245, 158, 11, 0.5);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-align: right;
+    letter-spacing: 0.01em;
+}
+
+.city-dropdown-list li.city-other-option:hover {
+    background: rgba(245, 158, 11, 0.18);
+    color: #92400e;
+}
+
 .error-message {
     color: var(--danger);
     font-size: 0.85rem;

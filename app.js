@@ -70,6 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!searchEl || !hiddenEl || !listEl) return;
 
         let activeIdx = -1;
+        let isCustomMode = false; // true when driver chose "أخرى"
 
         function highlight(text, query) {
             if (!query) return text;
@@ -78,6 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         function renderList(query) {
+            if (isCustomMode) return; // In custom mode, keep dropdown closed
             const q = query.trim();
             const filtered = q
                 ? SAUDI_CITIES.filter(c => c.includes(q))
@@ -99,10 +101,42 @@ document.addEventListener('DOMContentLoaded', () => {
                     listEl.appendChild(li);
                 });
             }
+
+            // Always append the "أخرى" option at the bottom
+            const otherLi = document.createElement('li');
+            otherLi.className = 'city-other-option';
+            otherLi.innerHTML = '✏️ أخرى (اكتب يدويًا)';
+            otherLi.addEventListener('mousedown', (e) => {
+                e.preventDefault();
+                enterCustomMode();
+            });
+            listEl.appendChild(otherLi);
+
             listEl.classList.add('open');
         }
 
+        function enterCustomMode() {
+            isCustomMode = true;
+            searchEl.value = '';
+            hiddenEl.value = '';
+            searchEl.classList.remove('selected');
+            searchEl.placeholder = 'اكتب الجهة يدويًا...';
+            searchEl.style.borderColor = 'var(--accent, #f59e0b)';
+            searchEl.style.background = 'rgba(245,158,11,0.07)';
+            listEl.classList.remove('open');
+            activeIdx = -1;
+            searchEl.focus();
+        }
+
+        function exitCustomMode() {
+            isCustomMode = false;
+            searchEl.placeholder = 'ابحث عن مدينة...';
+            searchEl.style.borderColor = '';
+            searchEl.style.background = '';
+        }
+
         function selectCity(city) {
+            exitCustomMode();
             searchEl.value  = city;
             hiddenEl.value  = city;
             searchEl.classList.add('selected');
@@ -115,15 +149,35 @@ document.addEventListener('DOMContentLoaded', () => {
             activeIdx = -1;
         }
 
-        searchEl.addEventListener('focus', () => renderList(searchEl.value));
+        searchEl.addEventListener('focus', () => {
+            if (!isCustomMode) renderList(searchEl.value);
+        });
+
         searchEl.addEventListener('input', () => {
+            if (isCustomMode) {
+                // In custom mode: whatever the driver types is the value
+                hiddenEl.value = searchEl.value.trim();
+                if (hiddenEl.value) searchEl.classList.add('selected');
+                else searchEl.classList.remove('selected');
+                return;
+            }
             hiddenEl.value = '';
             searchEl.classList.remove('selected');
             renderList(searchEl.value);
         });
 
         searchEl.addEventListener('keydown', (e) => {
-            const items = listEl.querySelectorAll('li:not(.no-result)');
+            if (isCustomMode) {
+                if (e.key === 'Escape') {
+                    // Cancel custom mode and clear
+                    exitCustomMode();
+                    searchEl.value = '';
+                    hiddenEl.value = '';
+                    searchEl.classList.remove('selected');
+                }
+                return;
+            }
+            const items = listEl.querySelectorAll('li:not(.no-result):not(.city-other-option)');
             if (e.key === 'ArrowDown') {
                 e.preventDefault();
                 activeIdx = Math.min(activeIdx + 1, items.length - 1);
@@ -143,6 +197,19 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         searchEl.addEventListener('blur', () => {
+            if (isCustomMode) {
+                // Commit whatever was typed
+                const typed = searchEl.value.trim();
+                if (typed) {
+                    hiddenEl.value = typed;
+                    searchEl.classList.add('selected');
+                } else {
+                    exitCustomMode();
+                    hiddenEl.value = '';
+                    searchEl.classList.remove('selected');
+                }
+                return;
+            }
             setTimeout(closeList, 150);
             // If typed text doesn't match a selection, clear hidden
             if (!hiddenEl.value) searchEl.value = '';

@@ -369,6 +369,10 @@ async function generateTripPdf(data) {
         [`${data.mobile}`, 'الجوال', `${data.nationalId}`, 'الهويه', `${data.driverName}`, 'السائق'],
         [`${data.plateNumber}`, 'رقم اللوحه', `${data.carColor}`, 'اللون', `${data.carModel}`, 'السيارة']
     ];
+    // Add second driver row if provided
+    if (data.secondDriver) {
+        driverRows.push(['-', '-', '-', '-', `${data.secondDriver}`, 'السائق الثاني']);
+    }
     const colW = [43, 20, 43, 20, 44, 20];
     const colX = [10, 53, 73, 116, 136, 180];
     for (const row of driverRows) {
@@ -621,6 +625,9 @@ async function generateTripPdf(data) {
 
     // Signature (right side)
     addArabicText(doc, `اسم السائق - ${data.driverName}`, 199, yPos + 6, { fontSize: 9, color: '#000000', align: 'right' });
+    if (data.secondDriver) {
+        addArabicText(doc, `اسم السائق الثاني - ${data.secondDriver}`, 199, yPos + 13, { fontSize: 9, color: '#000000', align: 'right' });
+    }
 
     // Official Stamp (left side)
     if (stampBase64) {

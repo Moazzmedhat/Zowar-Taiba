@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tripDestination = document.getElementById('trip-destination');
     const guestNameInput = document.getElementById('guest-name');
     const guestPhoneInput = document.getElementById('guest-phone');
+    const secondDriverInput = document.getElementById('second-driver');
     const companionsContainer = document.getElementById('companions-container');
     const btnAddCompanion = document.getElementById('btn-add-companion');
     const btnLogout = document.getElementById('btn-logout');
@@ -755,6 +756,7 @@ document.addEventListener('DOMContentLoaded', () => {
             destination: tripDestination.value,
             guestName: gName,
             guestPhone: gPhone,
+            secondDriver: secondDriverInput.value.trim() || '',
             companions: companions,
             qrUrl: null
         };

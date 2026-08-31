@@ -295,92 +295,65 @@ document.addEventListener('DOMContentLoaded', () => {
     // DATA INITIALIZATION & CRUD
     // ==========================================
 
+    // ==========================================
+    // SHARED DATA HELPERS (Vercel Blob API)
+    // ==========================================
+
+    async function loadFromApi(type) {
+        try {
+            const res = await fetch(`/api/get-data?type=${type}&v=` + Date.now());
+            if (res.ok) {
+                const data = await res.json();
+                if (Array.isArray(data) && data.length > 0) return data;
+            }
+        } catch (err) {
+            console.warn(`Could not load ${type} from API, falling back to static file.`, err);
+        }
+        return null;
+    }
+
+    async function saveToApi(type, data) {
+        try {
+            const res = await fetch('/api/save-data', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type, data })
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                console.error(`Failed to save ${type}:`, err);
+            }
+        } catch (err) {
+            console.error(`Network error saving ${type}:`, err);
+        }
+    }
+
     async function initData() {
-        // Check for old combined format and migrate
-        const oldData = localStorage.getItem('bst_drivers');
-        if (oldData) {
-            const parsed = JSON.parse(oldData);
-            if (parsed.length > 0 && parsed[0].carModel !== undefined) {
-                // Old combined format detected — migrate
-                const migratedDrivers = parsed.map(d => ({
-                    nationalId: d.nationalId,
-                    driverName: d.driverName,
-                    mobile: d.mobile
-                }));
-                const migratedCars = parsed.map(d => ({
-                    plateNumber: d.plateNumber,
-                    carModel: d.carModel,
-                    carColor: d.carColor
-                }));
-                // Deduplicate cars by plateNumber
-                const uniqueCars = [];
-                const seenPlates = new Set();
-                migratedCars.forEach(c => {
-                    const key = c.plateNumber.replace(/\s+/g, '');
-                    if (!seenPlates.has(key)) {
-                        seenPlates.add(key);
-                        uniqueCars.push(c);
-                    }
-                });
-                drivers = migratedDrivers;
-                cars = uniqueCars;
-                localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
-                localStorage.setItem('bst_cars', JSON.stringify(cars));
-                localStorage.removeItem('bst_drivers');
-                renderDriversTable();
-                renderCarsTable();
-                return;
+        // Load drivers: try Blob API first, fall back to static drivers.json
+        let loadedDrivers = await loadFromApi('drivers');
+        if (!loadedDrivers) {
+            try {
+                const res = await fetch('drivers.json?v=' + Date.now());
+                loadedDrivers = await res.json();
+            } catch (err) {
+                console.error('Could not load drivers.json', err);
+                loadedDrivers = [];
             }
         }
+        drivers = loadedDrivers;
 
-        // Load drivers (fetch with cache-buster and merge with localStorage)
-        let fileDrivers = [];
-        try {
-            const response = await fetch('drivers.json?v=' + Date.now());
-            fileDrivers = await response.json();
-        } catch (err) {
-            console.error("Could not load drivers.json", err);
+        // Load cars: try Blob API first, fall back to static cars.json
+        let loadedCars = await loadFromApi('cars');
+        if (!loadedCars) {
+            try {
+                const res = await fetch('cars.json?v=' + Date.now());
+                loadedCars = await res.json();
+            } catch (err) {
+                console.error('Could not load cars.json', err);
+                loadedCars = [];
+            }
         }
-
-        const storedDrivers = localStorage.getItem('bst_drivers_v2');
-        if (storedDrivers) {
-            drivers = JSON.parse(storedDrivers);
-            // Merge any new drivers from drivers.json
-            fileDrivers.forEach(fd => {
-                if (!drivers.some(d => d.nationalId === fd.nationalId)) {
-                    drivers.push(fd);
-                }
-            });
-            localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
-        } else {
-            drivers = fileDrivers;
-            localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
-        }
-
-        // Load cars (fetch with cache-buster and merge with localStorage)
-        let fileCars = [];
-        try {
-            const response = await fetch('cars.json?v=' + Date.now());
-            fileCars = await response.json();
-        } catch (err) {
-            console.error("Could not load cars.json", err);
-        }
-
-        const storedCars = localStorage.getItem('bst_cars');
-        if (storedCars) {
-            cars = JSON.parse(storedCars);
-            // Merge any new cars from cars.json (compare plates without spaces)
-            fileCars.forEach(fc => {
-                const keyFc = fc.plateNumber.replace(/\s+/g, '');
-                if (!cars.some(c => c.plateNumber.replace(/\s+/g, '') === keyFc)) {
-                    cars.push(fc);
-                }
-            });
-            localStorage.setItem('bst_cars', JSON.stringify(cars));
-        } else {
-            cars = fileCars;
-            localStorage.setItem('bst_cars', JSON.stringify(cars));
-        }
+        cars = loadedCars;
 
         renderDriversTable();
         renderCarsTable();
@@ -413,7 +386,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    formCrudDriver.addEventListener('submit', (e) => {
+    formCrudDriver.addEventListener('submit', async (e) => {
         e.preventDefault();
         const index = crudDriverIndex.value;
         const driverData = {
@@ -428,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
             drivers[parseInt(index)] = driverData;
         }
 
-        localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
+        await saveToApi('drivers', drivers);
         renderDriversTable();
         resetDriverForm();
     });
@@ -442,10 +415,10 @@ document.addEventListener('DOMContentLoaded', () => {
         driverFormTitle.textContent = "تعديل بيانات السائق";
     }
 
-    function deleteDriver(idx) {
+    async function deleteDriver(idx) {
         if (confirm("هل أنت متأكد من حذف هذا السائق؟")) {
             drivers.splice(idx, 1);
-            localStorage.setItem('bst_drivers_v2', JSON.stringify(drivers));
+            await saveToApi('drivers', drivers);
             renderDriversTable();
             resetDriverForm();
         }
@@ -484,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    formCrudCar.addEventListener('submit', (e) => {
+    formCrudCar.addEventListener('submit', async (e) => {
         e.preventDefault();
         const index = crudCarIndex.value;
         const carData = {
@@ -499,7 +472,7 @@ document.addEventListener('DOMContentLoaded', () => {
             cars[parseInt(index)] = carData;
         }
 
-        localStorage.setItem('bst_cars', JSON.stringify(cars));
+        await saveToApi('cars', cars);
         renderCarsTable();
         resetCarForm();
     });
@@ -516,10 +489,10 @@ document.addEventListener('DOMContentLoaded', () => {
         carFormTitle.textContent = "تعديل بيانات السيارة";
     }
 
-    function deleteCar(idx) {
+    async function deleteCar(idx) {
         if (confirm("هل أنت متأكد من حذف هذه السيارة؟")) {
             cars.splice(idx, 1);
-            localStorage.setItem('bst_cars', JSON.stringify(cars));
+            await saveToApi('cars', cars);
             renderCarsTable();
             resetCarForm();
         }

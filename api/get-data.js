@@ -1,15 +1,8 @@
-import { list } from '@vercel/blob';
+import { getSupabase } from './_supabase.js';
 
 export default async function handler(request, response) {
     if (request.method !== 'GET') {
         return response.status(405).json({ error: 'Method Not Allowed' });
-    }
-
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
-    if (!token) {
-        return response.status(500).json({
-            error: 'BLOB_READ_WRITE_TOKEN is missing from environment variables.'
-        });
     }
 
     try {
@@ -19,22 +12,40 @@ export default async function handler(request, response) {
             return response.status(400).json({ error: 'Invalid request. type must be "drivers" or "cars".' });
         }
 
-        const filename = `${type}.json`;
+        const supabase = getSupabase();
+        const { data, error } = await supabase
+            .from(type)
+            .select('*')
+            .order('id', { ascending: true });
 
-        // List blobs to find the one matching filename
-        const { blobs } = await list({ token, prefix: filename });
+        if (error) {
+            console.error(`Supabase error fetching ${type}:`, error);
+            return response.status(500).json({ error: error.message });
+        }
 
-        if (!blobs || blobs.length === 0) {
-            // No blob found yet — return empty array so the app falls back to static JSON
+        if (!data || data.length === 0) {
             return response.status(200).json([]);
         }
 
-        // Fetch the content of the blob
-        const blobUrl = blobs[0].url;
-        const blobResponse = await fetch(blobUrl);
-        const data = await blobResponse.json();
+        // Normalize data to standard camelCase for the frontend
+        let normalized = [];
+        if (type === 'drivers') {
+            normalized = data.map(d => ({
+                id: d.id,
+                nationalId: d.nationalId || d.national_id || '',
+                driverName: d.driverName || d.driver_name || '',
+                mobile: d.mobile || ''
+            }));
+        } else if (type === 'cars') {
+            normalized = data.map(c => ({
+                id: c.id,
+                plateNumber: c.plateNumber || c.plate_number || '',
+                carModel: c.carModel || c.car_model || '',
+                carColor: c.carColor || c.car_color || ''
+            }));
+        }
 
-        return response.status(200).json(data);
+        return response.status(200).json(normalized);
     } catch (error) {
         console.error('get-data error:', error);
         return response.status(500).json({ error: error.message || 'Unknown server error' });

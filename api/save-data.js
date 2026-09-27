@@ -1,37 +1,78 @@
-import { put } from '@vercel/blob';
+import { getSupabase } from './_supabase.js';
 
 export default async function handler(request, response) {
     if (request.method !== 'POST') {
         return response.status(405).json({ error: 'Method Not Allowed' });
     }
 
-    const token = process.env.BLOB_READ_WRITE_TOKEN;
-    if (!token) {
-        return response.status(500).json({
-            error: 'BLOB_READ_WRITE_TOKEN is missing from environment variables.'
-        });
-    }
-
     try {
-        const { type, data } = request.body;
+        const { type, data } = request.body || {};
 
-        if (!type || !data || !['drivers', 'cars'].includes(type)) {
-            return response.status(400).json({ error: 'Invalid request. type must be "drivers" or "cars".' });
+        if (!type || !Array.isArray(data) || !['drivers', 'cars'].includes(type)) {
+            return response.status(400).json({ error: 'Invalid request. "type" must be "drivers" or "cars", and "data" must be an array.' });
         }
 
-        const filename = `${type}.json`;
-        const content = JSON.stringify(data, null, 2);
-        const buffer = Buffer.from(content, 'utf-8');
+        const supabase = getSupabase();
 
-        // Use addRandomSuffix: false so we always overwrite the same file
-        const blob = await put(filename, buffer, {
-            access: 'public',
-            contentType: 'application/json',
-            token: token,
-            addRandomSuffix: false
-        });
+        if (type === 'drivers') {
+            const rows = data.map(d => ({
+                national_id: String(d.nationalId || d.national_id || '').trim(),
+                driver_name: String(d.driverName || d.driver_name || '').trim(),
+                mobile: String(d.mobile || '').trim()
+            }));
 
-        return response.status(200).json({ success: true, url: blob.url });
+            // Clear previous rows to keep database strictly in sync
+            const { error: delError } = await supabase
+                .from('drivers')
+                .delete()
+                .not('id', 'is', null);
+
+            if (delError) {
+                console.error('Error clearing drivers:', delError);
+                return response.status(500).json({ error: delError.message });
+            }
+
+            if (rows.length > 0) {
+                const { error: insError } = await supabase
+                    .from('drivers')
+                    .insert(rows);
+
+                if (insError) {
+                    console.error('Error inserting drivers:', insError);
+                    return response.status(500).json({ error: insError.message });
+                }
+            }
+        } else if (type === 'cars') {
+            const rows = data.map(c => ({
+                plate_number: String(c.plateNumber || c.plate_number || '').trim(),
+                car_model: String(c.carModel || c.car_model || '').trim(),
+                car_color: String(c.carColor || c.car_color || '').trim()
+            }));
+
+            // Clear previous rows to keep database strictly in sync
+            const { error: delError } = await supabase
+                .from('cars')
+                .delete()
+                .not('id', 'is', null);
+
+            if (delError) {
+                console.error('Error clearing cars:', delError);
+                return response.status(500).json({ error: delError.message });
+            }
+
+            if (rows.length > 0) {
+                const { error: insError } = await supabase
+                    .from('cars')
+                    .insert(rows);
+
+                if (insError) {
+                    console.error('Error inserting cars:', insError);
+                    return response.status(500).json({ error: insError.message });
+                }
+            }
+        }
+
+        return response.status(200).json({ success: true, count: data.length });
     } catch (error) {
         console.error('save-data error:', error);
         return response.status(500).json({ error: error.message || 'Unknown server error' });

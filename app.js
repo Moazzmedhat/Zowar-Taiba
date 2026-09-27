@@ -295,8 +295,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // DATA INITIALIZATION & CRUD
     // ==========================================
 
+    const btnRefreshAdminData = document.getElementById('btn-refresh-admin-data');
+
     // ==========================================
-    // SHARED DATA HELPERS (Vercel Blob API)
+    // SHARED DATA HELPERS (Supabase API)
     // ==========================================
 
     async function loadFromApi(type) {
@@ -304,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const res = await fetch(`/api/get-data?type=${type}&v=` + Date.now());
             if (res.ok) {
                 const data = await res.json();
-                if (Array.isArray(data) && data.length > 0) return data;
+                if (Array.isArray(data)) return data;
             }
         } catch (err) {
             console.warn(`Could not load ${type} from API, falling back to static file.`, err);
@@ -320,16 +322,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ type, data })
             });
             if (!res.ok) {
-                const err = await res.json();
-                console.error(`Failed to save ${type}:`, err);
+                let errText = "Unknown error";
+                try {
+                    const err = await res.json();
+                    errText = err.error || errText;
+                } catch(e) {}
+                console.error(`Failed to save ${type}:`, errText);
+                return { success: false, error: errText };
             }
+            return { success: true };
         } catch (err) {
             console.error(`Network error saving ${type}:`, err);
+            return { success: false, error: err.message };
         }
     }
 
     async function initData() {
-        // Load drivers: try Blob API first, fall back to static drivers.json
+        // Load drivers: try Supabase API first, fall back to static drivers.json
         let loadedDrivers = await loadFromApi('drivers');
         if (!loadedDrivers) {
             try {
@@ -342,7 +351,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         drivers = loadedDrivers;
 
-        // Load cars: try Blob API first, fall back to static cars.json
+        // Load cars: try Supabase API first, fall back to static cars.json
         let loadedCars = await loadFromApi('cars');
         if (!loadedCars) {
             try {
@@ -357,6 +366,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         renderDriversTable();
         renderCarsTable();
+    }
+
+    if (btnRefreshAdminData) {
+        btnRefreshAdminData.addEventListener('click', async () => {
+            btnRefreshAdminData.disabled = true;
+            btnRefreshAdminData.textContent = 'جاري التحديث...';
+            await initData();
+            btnRefreshAdminData.disabled = false;
+            btnRefreshAdminData.textContent = 'تحديث من السحابة 🔄';
+            alert('تم جلب وتحديث البيانات بنجاح من قاعدة البيانات.');
+        });
     }
 
     initData();
@@ -388,6 +408,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     formCrudDriver.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const submitBtn = formCrudDriver.querySelector('button[type="submit"]');
+        const origText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري الحفظ...';
+
         const index = crudDriverIndex.value;
         const driverData = {
             nationalId: crudDriverId.value.trim(),
@@ -395,15 +420,25 @@ document.addEventListener('DOMContentLoaded', () => {
             mobile: crudDriverMobile.value.trim()
         };
 
+        const updatedDrivers = [...drivers];
         if (index === '') {
-            drivers.push(driverData);
+            updatedDrivers.push(driverData);
         } else {
-            drivers[parseInt(index)] = driverData;
+            updatedDrivers[parseInt(index)] = driverData;
         }
 
-        await saveToApi('drivers', drivers);
-        renderDriversTable();
-        resetDriverForm();
+        const res = await saveToApi('drivers', updatedDrivers);
+        submitBtn.disabled = false;
+        submitBtn.textContent = origText;
+
+        if (res.success) {
+            drivers = updatedDrivers;
+            renderDriversTable();
+            resetDriverForm();
+            alert('تم حفظ بيانات السائق بنجاح في قاعدة البيانات.');
+        } else {
+            alert('تعذر حفظ السائق في قاعدة البيانات:\n' + (res.error || 'خطأ في الاتصال'));
+        }
     });
 
     function editDriver(idx) {
@@ -417,10 +452,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function deleteDriver(idx) {
         if (confirm("هل أنت متأكد من حذف هذا السائق؟")) {
-            drivers.splice(idx, 1);
-            await saveToApi('drivers', drivers);
-            renderDriversTable();
-            resetDriverForm();
+            const updatedDrivers = [...drivers];
+            updatedDrivers.splice(idx, 1);
+            const res = await saveToApi('drivers', updatedDrivers);
+            if (res.success) {
+                drivers = updatedDrivers;
+                renderDriversTable();
+                resetDriverForm();
+            } else {
+                alert('تعذر حذف السائق من قاعدة البيانات:\n' + (res.error || 'خطأ في الاتصال'));
+            }
         }
     }
 
@@ -459,6 +500,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     formCrudCar.addEventListener('submit', async (e) => {
         e.preventDefault();
+        const submitBtn = formCrudCar.querySelector('button[type="submit"]');
+        const origText = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'جاري الحفظ...';
+
         const index = crudCarIndex.value;
         const carData = {
             plateNumber: (crudCarPlateLetters.value.trim() + ' ' + crudCarPlateNumbers.value.trim()).trim(),
@@ -466,15 +512,25 @@ document.addEventListener('DOMContentLoaded', () => {
             carColor: crudCarColor.value.trim()
         };
 
+        const updatedCars = [...cars];
         if (index === '') {
-            cars.push(carData);
+            updatedCars.push(carData);
         } else {
-            cars[parseInt(index)] = carData;
+            updatedCars[parseInt(index)] = carData;
         }
 
-        await saveToApi('cars', cars);
-        renderCarsTable();
-        resetCarForm();
+        const res = await saveToApi('cars', updatedCars);
+        submitBtn.disabled = false;
+        submitBtn.textContent = origText;
+
+        if (res.success) {
+            cars = updatedCars;
+            renderCarsTable();
+            resetCarForm();
+            alert('تم حفظ بيانات السيارة بنجاح في قاعدة البيانات.');
+        } else {
+            alert('تعذر حفظ السيارة في قاعدة البيانات:\n' + (res.error || 'خطأ في الاتصال'));
+        }
     });
 
     function editCar(idx) {
@@ -491,10 +547,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function deleteCar(idx) {
         if (confirm("هل أنت متأكد من حذف هذه السيارة؟")) {
-            cars.splice(idx, 1);
-            await saveToApi('cars', cars);
-            renderCarsTable();
-            resetCarForm();
+            const updatedCars = [...cars];
+            updatedCars.splice(idx, 1);
+            const res = await saveToApi('cars', updatedCars);
+            if (res.success) {
+                cars = updatedCars;
+                renderCarsTable();
+                resetCarForm();
+            } else {
+                alert('تعذر حذف السيارة من قاعدة البيانات:\n' + (res.error || 'خطأ في الاتصال'));
+            }
         }
     }
 
@@ -551,6 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
             secAdminLogin.classList.add('hidden');
             secLogin.classList.add('hidden');
             secTripForm.classList.add('hidden');
+            initData();
         } else {
             adminLoginError.style.display = 'block';
         }
@@ -739,7 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const draftDoc = await generateTripPdf(pdfData);
             const pdfBlob = draftDoc.output('blob');
 
-            // Upload to Vercel Blob
+            // Upload to Supabase Storage
             const response = await fetch(`/api/upload?filename=booking-${bookingId}.pdf`, {
                 method: 'POST',
                 body: pdfBlob
@@ -750,7 +813,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 try {
                     errText = await response.text();
                 } catch(e) {}
-                throw new Error(`Vercel Blob upload failed with status ${response.status} (${response.statusText}). Response: ${errText.slice(0, 150)}`);
+                throw new Error(`Supabase Storage upload failed with status ${response.status} (${response.statusText}). Response: ${errText.slice(0, 150)}`);
             }
             const data = await response.json();
             const publicUrl = data.url;
